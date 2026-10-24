@@ -8,6 +8,7 @@ import {
   Briefcase,
   ClipboardCheck,
   LayoutGrid,
+  LifeBuoy,
   Rocket,
   ShieldHalf,
   Trophy,
@@ -26,6 +27,7 @@ export const NAV_ITEMS = [
   { href: "/evidence", label: "Evidence Centre", icon: ShieldHalf },
   { href: "/gamification", label: "Gamification", icon: Trophy },
   { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/support", label: "Help & Support", icon: LifeBuoy },
 ];
 
 // Dark navy sidebar from the template, with the orange-bordered active item. On small screens it is a

@@ -42,15 +42,23 @@ export function MentorChat({
   mode = "member",
   variant = "page",
   onClose,
+  title,
+  greeting,
+  quickReplies,
 }: {
   firstName?: string;
   mode?: ChatMode;
-  variant?: "page" | "widget";
+  // "page": fills the screen (/mentor). "embedded": a fixed-height block inside a page (/support).
+  variant?: "page" | "embedded" | "widget";
   onClose?: () => void;
+  title?: string;
+  greeting?: string;
+  // Always-visible buttons under the input; replaces the starter suggestions shown in the chat.
+  quickReplies?: string[];
 }) {
   const config = MODES[mode];
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: config.greeting(firstName), time: now() },
+    { role: "assistant", content: greeting ?? config.greeting(firstName), time: now() },
   ]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -81,9 +89,9 @@ export function MentorChat({
     <div
       className={cn(
         "flex flex-col overflow-hidden bg-white",
-        variant === "page"
-          ? "h-[calc(100vh-11rem)] min-h-[520px] rounded-xl border border-gray-200 shadow-sm"
-          : "h-full"
+        variant === "page" && "h-[calc(100vh-11rem)] min-h-[520px] rounded-xl border border-gray-200 shadow-sm",
+        variant === "embedded" && "h-[min(640px,75vh)] min-h-[480px] rounded-2xl border border-gray-200 shadow-lg",
+        variant === "widget" && "h-full"
       )}
     >
       <div className="flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white">
@@ -91,7 +99,7 @@ export function MentorChat({
           <Bot className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{config.title}</p>
+          <p className="truncate text-sm font-semibold">{title ?? config.title}</p>
           <p className="flex items-center gap-1.5 text-xs text-emerald-100">
             {isPending ? (
               <>
@@ -118,7 +126,7 @@ export function MentorChat({
             <div
               className={cn(
                 "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-800 shadow-sm",
-                variant === "page" && "sm:max-w-[70%]",
+                variant !== "widget" && "sm:max-w-[70%]",
                 m.role === "user" ? "rounded-tr-none bg-[#d9fdd3]" : "rounded-tl-none bg-white"
               )}
             >
@@ -147,7 +155,7 @@ export function MentorChat({
           </div>
         )}
 
-        {messages.length === 1 && !isPending && (
+        {!quickReplies && messages.length === 1 && !isPending && (
           <div className="flex flex-wrap gap-2 pt-2">
             {config.suggestions.map((s) => (
               <button
@@ -200,6 +208,22 @@ export function MentorChat({
           {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
         </button>
       </form>
+
+      {quickReplies && (
+        <div className="flex flex-wrap gap-2 border-t border-gray-200 bg-white px-3 py-3" aria-label="Quick replies">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => send(reply)}
+              disabled={isPending}
+              className="rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -12,6 +12,8 @@ const BARE_PATHS = ["/", "/login", "/signup", "/onboarding"];
 const BARE_PREFIXES = ["/investor", "/auth"];
 // Public pages that still get the floating chat (the MulaStream assistant for visitors).
 const PUBLIC_CHAT_PATHS = ["/", "/login", "/signup"];
+// Pages that show the chat full-size, so they don't also get the floating widget.
+const FULL_CHAT_PATHS = ["/mentor", "/support"];
 
 export function isBarePath(pathname: string): boolean {
   return BARE_PATHS.includes(pathname) || BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -40,8 +42,8 @@ export function AppShell({ name, isLoggedIn, children }: { name: string; isLogge
         <Header name={name} onMenu={() => setMenuOpen(true)} />
         <main className="pb-24">{children}</main>
       </div>
-      {/* /mentor is already the full chat, so the floating widget would duplicate it there. */}
-      {pathname !== "/mentor" && <ChatWidget mode="member" firstName={firstName} />}
+      {/* /mentor and /support already have the full chat, so the floating widget would duplicate it. */}
+      {!FULL_CHAT_PATHS.includes(pathname) && <ChatWidget mode="member" firstName={firstName} />}
     </div>
   );
 }
