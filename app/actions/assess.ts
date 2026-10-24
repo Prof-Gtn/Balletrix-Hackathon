@@ -9,6 +9,7 @@ import {
   type SubmittedEvidence,
 } from "@/lib/claude";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
+import { extractPdfText, isPdf } from "@/lib/pdf";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_MONTH = 3;
@@ -22,9 +23,47 @@ export type AssessmentResult =
   // `result` is present when the AI assessment succeeded but saving it failed, so the user doesn't lose it.
   | { ok: false; error: string; result?: Assessment };
 
-export async function runAssessment(businessDescription: string): Promise<AssessmentResult> {
-  const description = businessDescription?.trim();
-  if (!description) return { ok: false, error: "Please describe your business." };
+const MAX_PLAN_BYTES = 10 * 1024 * 1024;
+// About 60 pages of text; longer plans are rejected rather than silently cut short.
+const MAX_PLAN_CHARS = 200_000;
+
+// The business plan to assess: an uploaded file takes priority over the typed description.
+async function readBusinessPlan(formData: FormData): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  const file = formData.get("business_plan");
+
+  if (file instanceof File && file.size > 0) {
+    if (!isPdf(file)) {
+      return { ok: false, error: "Please upload a PDF. Word documents can't be read yet, so save your plan as a PDF first." };
+    }
+    if (file.size > MAX_PLAN_BYTES) return { ok: false, error: "That file is too large. The limit is 10 MB." };
+
+    let text = "";
+    try {
+      text = await extractPdfText(file);
+    } catch (error) {
+      console.error("Business plan text extraction failed", error);
+    }
+    if (!text) {
+      return {
+        ok: false,
+        error: "We couldn't read any text in that PDF. It may be a scan or photo. Try a text-based PDF, or paste your plan instead.",
+      };
+    }
+    if (text.length > MAX_PLAN_CHARS) {
+      return { ok: false, error: "That business plan is too long. Please upload a shorter version (about 60 pages at most)." };
+    }
+    return { ok: true, text };
+  }
+
+  const description = String(formData.get("description") ?? "").trim();
+  if (!description) return { ok: false, error: "Please describe your business or upload your business plan." };
+  return { ok: true, text: description };
+}
+
+export async function runAssessment(formData: FormData): Promise<AssessmentResult> {
+  const plan = await readBusinessPlan(formData);
+  if (!plan.ok) return plan;
+  const description = plan.text;
 
   const supabase = await createClient();
 

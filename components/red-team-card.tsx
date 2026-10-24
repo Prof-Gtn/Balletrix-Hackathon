@@ -12,8 +12,8 @@ export function RedTeamCard({ data }: { data: unknown }) {
     <section className="rounded-2xl border-2 border-danger/60 bg-[#2a0d14] p-5 text-white">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h4 className="text-sm font-bold">⚠️ Red Team Analysis (Venture Capitalist Critique)</h4>
-          <p className="mt-1 text-[11px] text-[#e6b3bd]">The harshest investor case against your business.</p>
+          <h4 className="text-sm font-bold">⚠️ Tough Love: What an Investor Will Worry About</h4>
+          <p className="mt-1 text-[11px] text-[#e6b3bd]">The questions a careful investor will ask, so you can prepare your answers.</p>
         </div>
         {report && (
           <div className="rounded-xl bg-black/30 px-3 py-2 text-right">
@@ -32,7 +32,7 @@ export function RedTeamCard({ data }: { data: unknown }) {
 
       {!report || !report.fatal_flaws.length ? (
         <p className="text-xs text-[#e6b3bd]">
-          No red team analysis yet. Run an AI assessment and a sceptical VC will look for the fatal flaws in your plan.
+          Nothing here yet. Run an AI assessment and an experienced advisor will point out the biggest risks in your plan.
         </p>
       ) : (
         <ol className="flex flex-col gap-3">

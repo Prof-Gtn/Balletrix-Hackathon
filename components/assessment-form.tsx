@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -8,6 +8,7 @@ import {
   Ban,
   CheckCircle2,
   CircleHelp,
+  FileText,
   FileWarning,
   Loader2,
   MessageSquareQuote,
@@ -40,21 +41,23 @@ function criterionLabel(value: string): string {
 
 export function AssessmentForm({ currentMonth }: { currentMonth: number }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [description, setDescription] = useState("");
-  // The description from the last run, so it can be re-assessed after evidence is uploaded.
-  const [lastDescription, setLastDescription] = useState<string | null>(null);
+  const [planFile, setPlanFile] = useState<File | null>(null);
+  // The last submission (text or file), so it can be re-assessed after evidence is uploaded.
+  const [lastSubmission, setLastSubmission] = useState<FormData | null>(null);
   const [response, setResponse] = useState<AssessmentResult | null>(null);
   // The month the assessment ran against; the prop changes once the dashboard refreshes after a pass.
   const [assessedMonth, setAssessedMonth] = useState(currentMonth);
   const [isPending, startTransition] = useTransition();
 
-  function assess(text: string) {
+  function assess(submission: FormData) {
     setResponse(null);
     setAssessedMonth(currentMonth);
-    setLastDescription(text);
+    setLastSubmission(submission);
 
     startTransition(async () => {
-      const res = await runAssessment(text);
+      const res = await runAssessment(submission);
       setResponse(res);
       // Re-fetch the dashboard card so the new score (and month, on a pass) shows up.
       if (res.ok) router.refresh();
@@ -63,7 +66,16 @@ export function AssessmentForm({ currentMonth }: { currentMonth: number }) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    assess(description);
+    const submission = new FormData();
+    submission.append("description", description);
+    // The server action uses the file instead of the text when one is attached.
+    if (planFile) submission.append("business_plan", planFile);
+    assess(submission);
+  }
+
+  function clearFile() {
+    setPlanFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   const result = response?.result;
@@ -77,19 +89,46 @@ export function AssessmentForm({ currentMonth }: { currentMonth: number }) {
         </label>
         <textarea
           id="business-description"
-          required
           rows={7}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={isPending}
           placeholder="What you sell, who buys it, how you charge, monthly revenue and customers so far…"
-          className="resize-y rounded-[11px] border border-[#dce3ee] bg-white px-3.5 py-3 text-[13px] leading-relaxed outline-none transition placeholder:text-[#a2adbd] focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a] disabled:bg-canvas"
+          className={cn(
+            "resize-y rounded-[11px] border border-[#dce3ee] bg-white px-3.5 py-3 text-[13px] leading-relaxed outline-none transition placeholder:text-[#a2adbd] focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a] disabled:bg-canvas",
+            planFile && "opacity-60"
+          )}
         />
+
+        <div className="grid gap-2">
+          <label htmlFor="business-plan-file" className="text-xs font-bold text-[#3c4a62]">
+            Or upload your business plan (PDF or Word)
+          </label>
+          <input
+            ref={fileInputRef}
+            id="business-plan-file"
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf"
+            disabled={isPending}
+            onChange={(e) => setPlanFile(e.target.files?.[0] ?? null)}
+            className="w-full min-w-0 rounded-[11px] border border-dashed border-[#dce3ee] bg-canvas p-2 text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-ink file:shadow-sm hover:file:bg-brand-soft"
+          />
+          {planFile && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-brand-dark">
+              <FileText className="h-3.5 w-3.5" />
+              We&apos;ll read <b className="font-semibold">{planFile.name}</b> instead of the text above.
+              <button type="button" onClick={clearFile} disabled={isPending} className="font-semibold text-muted underline hover:text-ink">
+                Remove file
+              </button>
+            </p>
+          )}
+        </div>
+
         <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
-          {lastDescription && (
+          {lastSubmission && (
             <button
               type="button"
-              onClick={() => assess(lastDescription)}
+              onClick={() => assess(lastSubmission)}
               disabled={isPending}
               className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[11px] border border-[#d9d4ff] bg-brand-soft px-4 text-xs font-semibold text-brand-dark transition hover:bg-[#e4e0ff] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -99,7 +138,7 @@ export function AssessmentForm({ currentMonth }: { currentMonth: number }) {
           )}
           <button
             type="submit"
-            disabled={isPending || !description.trim()}
+            disabled={isPending || (!description.trim() && !planFile)}
             className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[11px] bg-brand px-[18px] text-xs font-semibold text-white shadow-brand transition hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
           >
             <Sparkles className="h-4 w-4" />

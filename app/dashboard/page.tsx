@@ -129,13 +129,13 @@ export default async function DashboardPage() {
                 <span className="font-bold text-brand">Final gate</span>
               )}
             </StatCard>
-            <StatCard label="Readiness score" icon={Gauge} tone="green" value={`${readinessScore}/100`}>
+            <StatCard label="Investment Readiness Score" icon={Gauge} tone="green" value={`${readinessScore}/100`}>
               Gate: {GATE_REQUIREMENTS[currentMonth].summary}
             </StatCard>
-            <StatCard label="Verified evidence" icon={ShieldCheck} tone="blue" value={String(verifiedCount)}>
+            <StatCard label="Checked Documents" icon={ShieldCheck} tone="blue" value={String(verifiedCount)}>
               {verifiedCount > 0 ? <span className="font-bold text-success">+15 bonus active</span> : "None this month"}
             </StatCard>
-            <StatCard label="Flagged evidence" icon={ShieldAlert} tone="red" value={String(flaggedCount)}>
+            <StatCard label="Needs Attention" icon={ShieldAlert} tone="red" value={String(flaggedCount)}>
               {flaggedCount > 0 ? <span className="font-bold text-danger">Needs review</span> : "Nothing flagged"}
             </StatCard>
           </div>
