@@ -3,8 +3,8 @@
 import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type EvidenceType } from "@/lib/evidence";
 import { createClient } from "@/lib/supabase/server";
 
-// Supabase bucket names are case-sensitive; this project's bucket is "Evidence".
-const BUCKET = "Evidence";
+// Hardcoded while debugging "Bucket not found"; Supabase bucket ids are case-sensitive.
+const BUCKET_NAME = 'Evidence';
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export type EvidenceResult = { ok: true; message: string } | { ok: false; error: string };
@@ -23,6 +23,9 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   if (!evidenceType) return { ok: false, error: "Please select an evidence type." };
 
   const supabase = await createClient();
+  // DEBUG: shows the buckets this user's session can see. An empty list can just mean storage.buckets
+  // has no SELECT policy for this user, not that no bucket exists.
+  const { data: buckets } = await supabase.storage.listBuckets(); console.log('DEBUG: Available buckets:', buckets?.map(b => b.name));
 
   const {
     data: { user },
@@ -42,18 +45,19 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   const safeName = file.name.replace(/[^\w.\- ]+/g, "_");
   const filePath = `${user.id}/${crypto.randomUUID()}-${safeName}`;
 
+  console.log('DEBUG: Attempting upload to bucket:', JSON.stringify(BUCKET_NAME));
   const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
+    .from(BUCKET_NAME)
     .upload(filePath, file, { contentType: file.type || undefined });
   if (uploadError) {
     // Surface the storage error as-is (e.g. an RLS policy violation or a size limit) so it can be diagnosed.
-    console.error(`Evidence upload to '${BUCKET}' failed`, uploadError);
+    console.error(`Evidence upload to '${BUCKET_NAME}' failed`, uploadError);
     return { ok: false, error: `Upload failed: ${uploadError.message}` };
   }
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+  } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
   const status = simulateVerification(evidenceType);
 
@@ -70,7 +74,7 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   });
   if (insertError) {
     // Best effort: don't leave an orphaned file in storage when the database row couldn't be saved.
-    await supabase.storage.from(BUCKET).remove([filePath]);
+    await supabase.storage.from(BUCKET_NAME).remove([filePath]);
     return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
   }
 
