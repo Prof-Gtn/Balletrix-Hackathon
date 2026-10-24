@@ -1,14 +1,11 @@
-import { Briefcase, Calculator, FileCheck2, LayoutDashboard, Sparkles } from "lucide-react";
+import { Briefcase, FileCheck2, Sparkles } from "lucide-react";
 import { Brand } from "@/components/brand";
-import { cn } from "@/lib/utils";
 
-// Sections of the dashboard page; the sidebar links jump to them.
+// The dashboard's three wizard steps; the wizard switches step when the URL hash changes.
 const NAV_ITEMS = [
-  { href: "#overview", label: "Dashboard", icon: LayoutDashboard },
-  { href: "#assessment", label: "AI Audit", icon: Sparkles },
-  { href: "#evidence", label: "Evidence", icon: FileCheck2 },
-  { href: "#package", label: "DD Package", icon: Briefcase },
-  { href: "#valuation", label: "Valuation", icon: Calculator },
+  { href: "#step-1", label: "1. Your Business", icon: Sparkles },
+  { href: "#step-2", label: "2. Fix & Prove", icon: FileCheck2 },
+  { href: "#step-3", label: "3. Get Funded", icon: Briefcase },
 ];
 
 export function initials(name: string): string {
@@ -30,15 +27,12 @@ export function DashboardSidebar({ name, email }: { name: string; email: string 
 
       <p className="hidden px-3 pt-[25px] pb-2.5 text-[10px] tracking-[1.4px] text-[#728199] uppercase md:block">Workspace</p>
       <nav aria-label="Main navigation" className="mt-4 grid gap-[5px] md:mt-0">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }, i) => (
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
           <a
             key={href}
             href={href}
             title={label}
-            className={cn(
-              "flex items-center justify-center gap-3 rounded-[11px] px-[5px] py-[13px] text-[13px] transition md:justify-start md:px-[13px] md:py-3",
-              i === 0 ? "bg-brand-dark text-white shadow-[0_8px_20px_#0002]" : "text-[#aab6c9] hover:bg-white/5 hover:text-white"
-            )}
+            className="flex min-h-[48px] items-center justify-center gap-3 rounded-[11px] px-[5px] py-[13px] text-sm font-semibold text-[#aab6c9] transition hover:bg-white/5 hover:text-white md:justify-start md:px-[13px] md:py-3"
           >
             <Icon className="h-[18px] w-[18px] shrink-0 md:h-4 md:w-4" />
             <span className="hidden md:inline">{label}</span>

@@ -29,20 +29,26 @@ export function EvidenceUploadForm() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <label htmlFor="evidence-file" className="text-xs font-bold text-[#3c4a62]">
-        Upload Evidence (Contracts, Invoices, Bank Statements)
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div>
+        <h3 className="text-lg font-extrabold">Upload Proof of your Business</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted">
+          A signed contract, an invoice or a bank statement proves your business is real and raises your score.
+        </p>
+      </div>
+      <label htmlFor="evidence-type" className="sr-only">
+        What kind of document is this?
       </label>
       <select
+        id="evidence-type"
         name="evidence_type"
         required
         defaultValue=""
         disabled={isPending}
-        aria-label="Evidence type"
-        className="h-[42px] w-full rounded-[11px] border border-[#dce3ee] bg-white px-3 text-[13px] text-ink outline-none transition focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a]"
+        className="min-h-[52px] w-full rounded-2xl border border-[#dce3ee] bg-white px-4 text-[15px] text-ink outline-none transition focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a]"
       >
         <option value="" disabled>
-          Select evidence type…
+          What kind of document is this?
         </option>
         {/* Submits the label (e.g. "Signed Contract"); the server action maps it to the stored key. */}
         {Object.entries(EVIDENCE_TYPE_LABELS).map(([key, label]) => (
@@ -58,27 +64,30 @@ export function EvidenceUploadForm() {
         required
         disabled={isPending}
         accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,.csv"
-        className="w-full min-w-0 rounded-[11px] border border-dashed border-[#dce3ee] bg-canvas p-2 text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-ink file:shadow-sm hover:file:bg-brand-soft"
+        aria-describedby="evidence-file-hint"
+        className="w-full min-w-0 rounded-2xl border-2 border-dashed border-[#dce3ee] bg-canvas p-3 text-sm text-muted file:mr-3 file:min-h-[40px] file:rounded-xl file:border-0 file:bg-white file:px-4 file:text-sm file:font-bold file:text-ink file:shadow-sm hover:file:bg-brand-soft"
       />
+      <p id="evidence-file-hint" className="-mt-2 text-xs text-muted">
+        PDF, photo, Word, Excel or CSV, up to 10 MB. Bank statements must be a PDF from your bank.
+      </p>
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-[11px] bg-brand px-[18px] text-xs font-semibold text-white shadow-brand transition hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-brand px-6 text-sm font-bold text-white shadow-brand transition hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:w-auto sm:self-start"
       >
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-        {isPending ? "Uploading..." : "Submit Evidence"}
+        {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+        {isPending ? "Uploading..." : "Upload Proof"}
       </button>
-      <p className="text-[11px] text-muted">PDF, image, Word, Excel or CSV, up to 10 MB.</p>
 
       {response?.ok && (
-        <p className="flex items-start gap-2 text-xs text-success" role="status">
-          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <p className="flex items-start gap-2 text-sm leading-relaxed text-success" role="status">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           {response.message}
         </p>
       )}
       {response && !response.ok && (
-        <p className="flex items-start gap-2 text-xs text-danger" role="alert">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <p className="flex items-start gap-2 text-sm leading-relaxed text-danger" role="alert">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           {response.error}
         </p>
       )}

@@ -4,12 +4,14 @@ import {
   assessBusiness,
   NO_BONUS,
   runDevilsAdvocate,
+  validateDocument,
   type Assessment,
   type ScoreBonus,
   type SubmittedEvidence,
 } from "@/lib/claude";
+import { DocumentReadError, extractDocumentText } from "@/lib/documents";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
-import { extractPdfText, isPdf } from "@/lib/pdf";
+import type { RedTeamReport } from "@/lib/red-team";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_MONTH = 3;
@@ -24,47 +26,49 @@ export type AssessmentResult =
   | { ok: false; error: string; result?: Assessment };
 
 const MAX_PLAN_BYTES = 10 * 1024 * 1024;
+// Less than this from a file usually means a scanned image with no text layer.
+const MIN_EXTRACTED_CHARS = 50;
 // About 60 pages of text; longer plans are rejected rather than silently cut short.
 const MAX_PLAN_CHARS = 200_000;
 
+const UNREADABLE_DOCUMENT =
+  "We couldn't read the text in this document. Please make sure it is a text-based PDF or Word document, not a scanned image.";
+const NOTHING_TO_ASSESS = "Please type a description or upload a document before running the assessment.";
+
+type BusinessPlan = { ok: true; text: string; fromFile: boolean } | { ok: false; error: string };
+
 // The business plan to assess: an uploaded file takes priority over the typed description.
-async function readBusinessPlan(formData: FormData): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+async function readBusinessPlan(formData: FormData): Promise<BusinessPlan> {
   const file = formData.get("business_plan");
 
   if (file instanceof File && file.size > 0) {
-    if (!isPdf(file)) {
-      return { ok: false, error: "Please upload a PDF. Word documents can't be read yet, so save your plan as a PDF first." };
-    }
     if (file.size > MAX_PLAN_BYTES) return { ok: false, error: "That file is too large. The limit is 10 MB." };
 
     let text = "";
     try {
-      text = await extractPdfText(file);
+      text = await extractDocumentText(file);
     } catch (error) {
+      if (error instanceof DocumentReadError) return { ok: false, error: error.message };
       console.error("Business plan text extraction failed", error);
     }
-    if (!text) {
-      return {
-        ok: false,
-        error: "We couldn't read any text in that PDF. It may be a scan or photo. Try a text-based PDF, or paste your plan instead.",
-      };
-    }
+    if (text.length < MIN_EXTRACTED_CHARS) return { ok: false, error: UNREADABLE_DOCUMENT };
     if (text.length > MAX_PLAN_CHARS) {
-      return { ok: false, error: "That business plan is too long. Please upload a shorter version (about 60 pages at most)." };
+      return { ok: false, error: "That document is too long. Please upload a shorter version (about 60 pages at most)." };
     }
-    return { ok: true, text };
+    return { ok: true, text, fromFile: true };
   }
 
   const description = String(formData.get("description") ?? "").trim();
-  if (!description) return { ok: false, error: "Please describe your business or upload your business plan." };
-  return { ok: true, text: description };
+  if (!description) return { ok: false, error: NOTHING_TO_ASSESS };
+  return { ok: true, text: description, fromFile: false };
+}
+
+// "It is a recipe." -> "It is a recipe" so it reads naturally inside the error sentence.
+function asClause(reason: string): string {
+  return reason.trim().replace(/[.!\s]+$/, "") || "It doesn't describe a business";
 }
 
 export async function runAssessment(formData: FormData): Promise<AssessmentResult> {
-  const plan = await readBusinessPlan(formData);
-  if (!plan.ok) return plan;
-  const description = plan.text;
-
   const supabase = await createClient();
 
   const {
@@ -72,6 +76,27 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) return { ok: false, error: "You must be logged in to run an assessment." };
+
+  const plan = await readBusinessPlan(formData);
+  if (!plan.ok) return plan;
+  const description = plan.text;
+
+  // The bouncer: stop school assignments, recipes and other unrelated text before they get a score.
+  try {
+    const validation = await validateDocument(description);
+    if (!validation.is_valid) {
+      const what = plan.fromFile ? "you uploaded something" : "what you wrote";
+      return {
+        ok: false,
+        error:
+          `It looks like ${what} isn't a business plan. ${asClause(validation.reason)}. ` +
+          "Please upload a document that describes what you sell, who buys it, and how you make money.",
+      };
+    }
+  } catch (error) {
+    console.error("validateDocument failed", error);
+    return { ok: false, error: "We couldn't check your document right now. Please try again in a moment." };
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -102,18 +127,21 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   const hasVerifiedThisMonth = evidence.some((e) => e.month === currentMonth && e.status === "verified");
   const bonus = hasVerifiedThisMonth ? VERIFIED_EVIDENCE_BONUS : NO_BONUS;
 
-  // The Devil's Advocate runs alongside the main assessment to save time, but its result is only
-  // saved once the main assessment has succeeded.
-  const [assessment, redTeam] = await Promise.allSettled([
-    assessBusiness(description, currentMonth, { bonus, evidence }),
-    runDevilsAdvocate(description),
-  ]);
-
-  if (assessment.status === "rejected") {
-    console.error("assessBusiness failed", assessment.reason);
+  // Both agents run in parallel. A Tough Love (red team) failure is caught so it can't cancel the score.
+  let result: Assessment;
+  let redTeam: RedTeamReport | null;
+  try {
+    [result, redTeam] = await Promise.all([
+      assessBusiness(description, currentMonth, { bonus, evidence }),
+      runDevilsAdvocate(description).catch((error) => {
+        console.error("runDevilsAdvocate failed", error);
+        return null;
+      }),
+    ]);
+  } catch (error) {
+    console.error("assessBusiness failed", error);
     return { ok: false, error: "The AI assessment failed. Please try again in a moment." };
   }
-  const result: Assessment = assessment.value;
 
   const passed = result.gate_status === "PASSED";
   const disqualified = result.gate_status === "DISQUALIFIED";
@@ -143,16 +171,14 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
     return { ok: false, error: `Assessment completed but your progress could not be saved: ${updateError.message}`, result };
   }
 
-  // Saved separately so a red team failure (or a missing red_team_flaws column) never blocks the
-  // score and month update above. The dashboard keeps showing the previous critique in that case.
-  if (redTeam.status === "fulfilled") {
-    const { error: redTeamError } = await supabase
-      .from("profiles")
-      .update({ red_team_flaws: redTeam.value })
-      .eq("id", user.id);
+  // The action plan and Tough Love card are saved separately, so a missing column (migration not run)
+  // or a red team failure never blocks the score and month update above.
+  const { error: roadmapError } = await supabase.from("profiles").update({ roadmap: result.roadmap }).eq("id", user.id);
+  if (roadmapError) console.error("Saving roadmap failed", roadmapError);
+
+  if (redTeam) {
+    const { error: redTeamError } = await supabase.from("profiles").update({ red_team_flaws: redTeam }).eq("id", user.id);
     if (redTeamError) console.error("Saving red_team_flaws failed", redTeamError);
-  } else {
-    console.error("runDevilsAdvocate failed", redTeam.reason);
   }
 
   return { ok: true, result, evidenceBonus };
