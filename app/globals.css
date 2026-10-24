@@ -1,1 +1,60 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-navy: #0b1220;
+  --color-navy-2: #101827;
+  --color-ink: #17243b;
+  --color-muted: #75839b;
+  --color-line: #e7ecf4;
+  --color-canvas: #f4f7fc;
+  --color-brand: #6557f5;
+  --color-brand-dark: #5145cd;
+  --color-brand-soft: #eeebff;
+  --color-brand-light: #a99aff;
+  --color-success: #0f9f78;
+  --color-success-soft: #e4f8f1;
+  --color-danger: #e05268;
+  --color-danger-soft: #ffebef;
+  --color-warning: #b7791f;
+  --color-warning-soft: #fff6e0;
+  --color-info: #3978df;
+  --color-info-soft: #e8f2ff;
+
+  --shadow-card: 0 5px 18px #1d31500a;
+  --shadow-soft: 0 14px 38px rgba(22, 37, 66, 0.08);
+  --shadow-brand: 0 3px 8px #6557f520;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* "Download as PDF" prints only the element marked .print-area (the due diligence memo). */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: white;
+  }
+  body:has(.print-area) * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0 0 auto 0;
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

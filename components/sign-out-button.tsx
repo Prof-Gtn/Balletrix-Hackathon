@@ -20,10 +20,11 @@ export function SignOutButton() {
     <button
       onClick={handleSignOut}
       disabled={loading}
-      className="inline-flex shrink-0 items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-70"
+      aria-label="Sign out"
+      title="Sign out"
+      className="grid h-9 w-9 place-items-center rounded-[10px] text-[#53627a] transition hover:bg-canvas hover:text-ink disabled:opacity-60"
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-      Sign Out
+      {loading ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <LogOut className="h-[18px] w-[18px]" />}
     </button>
   );
 }
