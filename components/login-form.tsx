@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, LogOut, Mail, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LayoutDashboard, Loader2, LogOut, Mail, UserPlus } from "lucide-react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ async function ensureProfile(supabase: SupabaseClient, user: User) {
 }
 
 export function LoginForm() {
+  const router = useRouter();
   const [supabase] = useState(createClient);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
@@ -62,6 +65,7 @@ export function LoginForm() {
       } else if (data.session && data.user) {
         const profileError = await ensureProfile(supabase, data.user);
         if (profileError) setError(`Account created, but the profile could not be saved: ${profileError.message}`);
+        else router.push("/dashboard");
       } else {
         // Email confirmation is on: no session yet, so the profile is created on first login.
         setMessage("Check your inbox to confirm your email, then log in.");
@@ -76,6 +80,7 @@ export function LoginForm() {
       } else {
         const profileError = await ensureProfile(supabase, data.user);
         if (profileError) setError(`Logged in, but the profile could not be saved: ${profileError.message}`);
+        else router.push("/dashboard");
       }
     }
 
@@ -89,6 +94,12 @@ export function LoginForm() {
           Signed in as <span className="font-medium">{user.email}</span>
         </p>
         {error && <p className="max-w-sm text-center text-sm text-red-600">{error}</p>}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+        >
+          <LayoutDashboard className="h-4 w-4" /> Go to dashboard
+        </Link>
         <button
           onClick={() => supabase.auth.signOut()}
           className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
