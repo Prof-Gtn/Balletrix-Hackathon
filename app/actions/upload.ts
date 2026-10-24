@@ -5,8 +5,8 @@ import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type Evidenc
 import { extractPdfText, isPdf } from "@/lib/pdf";
 import { createClient } from "@/lib/supabase/server";
 
-// Hardcoded while debugging "Bucket not found"; Supabase bucket ids are case-sensitive.
-const BUCKET_NAME = 'Evidence';
+// The storage bucket id, which is case-sensitive: uploads use the id, not the display name.
+const BUCKET_NAME = "evidence";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export type EvidenceResult = { ok: true; message: string } | { ok: false; error: string };
@@ -85,9 +85,6 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   if (!evidenceType) return { ok: false, error: "Please select an evidence type." };
 
   const supabase = await createClient();
-  // DEBUG: shows the buckets this user's session can see. An empty list can just mean storage.buckets
-  // has no SELECT policy for this user, not that no bucket exists.
-  const { data: buckets } = await supabase.storage.listBuckets(); console.log('DEBUG: Available buckets:', buckets?.map(b => b.name));
 
   const {
     data: { user },
@@ -107,7 +104,6 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   const safeName = file.name.replace(/[^\w.\- ]+/g, "_");
   const filePath = `${user.id}/${crypto.randomUUID()}-${safeName}`;
 
-  console.log('DEBUG: Attempting upload to bucket:', JSON.stringify(BUCKET_NAME));
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(filePath, file, { contentType: file.type || undefined });
