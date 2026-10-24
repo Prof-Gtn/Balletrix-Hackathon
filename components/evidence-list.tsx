@@ -52,6 +52,76 @@ export function CountChip({
   );
 }
 
+// Evidence Centre: every uploaded document in one table, with colour-coded status badges.
+export function EvidenceTable({ evidence }: { evidence: EvidenceRow[] }) {
+  if (!evidence.length) {
+    return (
+      <p className="rounded-lg border border-dashed border-gray-200 px-5 py-10 text-center text-sm text-gray-500">
+        No documents yet. Upload a signed contract, invoice or bank statement to get started.
+      </p>
+    );
+  }
+
+  return (
+    <div className="-mx-6 overflow-x-auto">
+      <table className="w-full min-w-[640px] text-left text-sm">
+        <thead>
+          <tr className="border-y border-gray-100 bg-gray-50 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+            <th scope="col" className="px-6 py-3">Document Name</th>
+            <th scope="col" className="px-6 py-3">Type</th>
+            <th scope="col" className="px-6 py-3">Status</th>
+            <th scope="col" className="px-6 py-3 text-right">Date</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {evidence.map((item) => {
+            const checked = isChecked(item);
+            const fraudAlert = item.reconciliation_status === "failed";
+            const type = toEvidenceType(item.evidence_type);
+            return (
+              <tr key={item.id} className="align-top hover:bg-gray-50/60">
+                <td className="max-w-[320px] px-6 py-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className={cn("mt-0.5 h-4 w-4 shrink-0", checked ? "text-emerald-500" : "text-red-400")} />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-800">{fileNameFromPath(item.file_url)}</p>
+                      {fraudAlert && item.ai_feedback && <p className="mt-1 text-xs leading-relaxed text-red-600">{item.ai_feedback}</p>}
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{type ? EVIDENCE_TYPE_LABELS[type] : "Document"}</td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                        checked ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                      )}
+                    >
+                      {checked ? "Verified" : "Flagged"}
+                    </span>
+                    {fraudAlert && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#ff1f3d] px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-white uppercase">
+                        <Siren className="h-3 w-3" /> Fraud Alert
+                      </span>
+                    )}
+                    {item.reconciliation_status === "reconciled" && (
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                        Reconciled
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-right whitespace-nowrap text-gray-500">{formatShortDate(item.created_at)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // Uploaded documents with their check status, Fraud Alert badge and the reason a bank statement failed.
 export function EvidenceList({
   evidence,

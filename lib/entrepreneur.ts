@@ -59,9 +59,11 @@ export async function loadEntrepreneur({ requireOnboarding = false } = {}): Prom
     uploads,
     assessments,
     progress: {
+      hasBusinessName: Boolean(profile?.business_name),
       readinessScore,
       currentMonth,
       checkedDocuments: uploads.filter((row) => row.ai_verification_status === "verified").length,
+      uploadedDocuments: uploads.length,
       assessments: assessments.length,
       profileComplete: Boolean(profile?.business_name && profile?.sector && profile?.business_description),
     },

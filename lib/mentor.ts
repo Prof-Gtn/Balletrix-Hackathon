@@ -39,6 +39,17 @@ const MAX_HISTORY = 20;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// The per-user instruction, e.g. "The user runs a Retail business called Kapana Kings with a readiness
+// score of 42. Answer their questions with specific advice for their sector."
+function personalise(context: MentorContext): string {
+  const what = context.sector ? `a ${context.sector} business` : "a business";
+  const called = context.businessName ? ` called ${context.businessName}` : "";
+  return (
+    `You are the MulaStream AI Mentor. The user runs ${what}${called} with a readiness score of ${context.readinessScore}. ` +
+    "Answer their questions with specific advice for their sector."
+  );
+}
+
 function describe(context: MentorContext): string {
   return [
     `Name: ${context.name}`,
@@ -61,7 +72,7 @@ export async function askMentor(history: MentorMessage[], context: MentorContext
     max_tokens: 16000,
     system: [
       { type: "text", text: MENTOR_PROMPT },
-      { type: "text", text: `<entrepreneur>\n${describe(context)}\n</entrepreneur>` },
+      { type: "text", text: `${personalise(context)}\n\n<entrepreneur>\n${describe(context)}\n</entrepreneur>` },
     ],
     // If the primary model declines, the API retries on a fallback model in the same call.
     betas: ["server-side-fallback-2026-07-01"],

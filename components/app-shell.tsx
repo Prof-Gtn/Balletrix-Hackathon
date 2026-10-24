@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { ChatWidget } from "@/components/ChatWidget";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 
@@ -25,8 +26,10 @@ export function AppShell({ name, children }: { name: string; children: React.Rea
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="min-w-0 flex-1">
         <Header name={name} onMenu={() => setMenuOpen(true)} />
-        <main>{children}</main>
+        <main className="pb-24">{children}</main>
       </div>
+      {/* /mentor is already the full chat, so the floating widget would duplicate it there. */}
+      {pathname !== "/mentor" && <ChatWidget firstName={name.split(/\s+/)[0]} />}
     </div>
   );
 }

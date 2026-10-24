@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
-import { Bot, CheckCheck, SendHorizontal } from "lucide-react";
+import { Bot, CheckCheck, Loader2, SendHorizontal, X } from "lucide-react";
 import { sendMentorMessage } from "@/app/actions/mentor";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,17 @@ const SUGGESTIONS = [
 
 const now = () => new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
 
-// WhatsApp-style chat with the AI Mentor. The conversation lives in this page only and is not saved.
-export function MentorChat({ firstName }: { firstName: string }) {
+// WhatsApp-style chat with the AI Mentor, used full-page on /mentor and in the floating widget.
+// The conversation lives in the browser only and is not saved.
+export function MentorChat({
+  firstName,
+  variant = "page",
+  onClose,
+}: {
+  firstName: string;
+  variant?: "page" | "widget";
+  onClose?: () => void;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -52,15 +61,35 @@ export function MentorChat({ firstName }: { firstName: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-11rem)] min-h-[520px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden bg-white",
+        variant === "page"
+          ? "h-[calc(100vh-11rem)] min-h-[520px] rounded-xl border border-gray-200 shadow-sm"
+          : "h-full"
+      )}
+    >
       <div className="flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-500">
           <Bot className="h-5 w-5" />
         </span>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">AI Mentor</p>
-          <p className="text-xs text-emerald-100">{isPending ? "typing…" : "online"}</p>
+          <p className="flex items-center gap-1.5 text-xs text-emerald-100">
+            {isPending ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" /> typing…
+              </>
+            ) : (
+              "online"
+            )}
+          </p>
         </div>
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="Close chat" className="rounded-full p-1.5 text-emerald-100 hover:bg-white/10 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto bg-[#efeae2] px-3 py-4 sm:px-6" aria-live="polite">
@@ -68,7 +97,8 @@ export function MentorChat({ firstName }: { firstName: string }) {
           <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
             <div
               className={cn(
-                "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-800 shadow-sm sm:max-w-[70%]",
+                "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-800 shadow-sm",
+                variant === "page" && "sm:max-w-[70%]",
                 m.role === "user" ? "rounded-tr-none bg-[#d9fdd3]" : "rounded-tl-none bg-white"
               )}
             >
@@ -147,7 +177,7 @@ export function MentorChat({ firstName }: { firstName: string }) {
           aria-label="Send"
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-500 text-white transition hover:bg-emerald-600 disabled:opacity-50"
         >
-          <SendHorizontal className="h-5 w-5" />
+          {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
         </button>
       </form>
     </div>

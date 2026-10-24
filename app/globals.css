@@ -79,7 +79,7 @@ body {
   color: var(--color-ink);
 }
 
-/* "Download as PDF" prints only the element marked .print-area (the due diligence memo). */
+/* "Download as PDF" prints only the generated document that was clicked (marked .print-target). */
 @media print {
   @page {
     margin: 14mm;
@@ -87,14 +87,15 @@ body {
   body {
     background: white;
   }
-  body:has(.print-area) * {
+  /* The document whose "Download as PDF" was clicked gets .print-target; everything else is hidden. */
+  body:has(.print-target) * {
     visibility: hidden;
   }
-  .print-area,
-  .print-area * {
+  .print-target,
+  .print-target * {
     visibility: visible;
   }
-  .print-area {
+  .print-target {
     position: absolute;
     inset: 0 0 auto 0;
     max-width: none;

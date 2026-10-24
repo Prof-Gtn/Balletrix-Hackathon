@@ -81,7 +81,7 @@ export default async function DashboardPage() {
 
       {/* Top stats cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between h-full rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <div>
             <p className="mb-2 text-sm font-medium text-gray-500">Overall Readiness Score</p>
             <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="h-full rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="mb-2 text-sm font-medium text-gray-500">Current Phase</p>
           <h3 className="font-bold text-slate-800">Month {currentMonth}</h3>
           <p className="text-xs text-gray-500">{phase.name}</p>
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-100 bg-white p-5 text-center shadow-sm">
+        <div className="h-full rounded-xl border border-gray-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="mb-1 text-sm font-medium text-gray-500">Total Points</p>
           <h3 className="flex items-center justify-center gap-1 text-3xl font-bold text-slate-800">
             <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" /> {points.toLocaleString("en")}
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
           <p className="mt-2 text-xs text-gray-400">Next badge at {nextMilestone(points).toLocaleString("en")}</p>
         </div>
 
-        <div className="rounded-xl border border-gray-100 bg-white p-5 text-center shadow-sm">
+        <div className="h-full rounded-xl border border-gray-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="mb-1 text-sm font-medium text-gray-500">Badges Earned</p>
           <h3 className="flex items-center justify-center gap-1 text-3xl font-bold text-slate-800">
             <Shield className="h-5 w-5 fill-yellow-500 text-yellow-500" /> {earnedBadges}

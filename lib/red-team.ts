@@ -2,7 +2,7 @@
 export type FlawSeverity = "high" | "medium";
 
 export type RedTeamReport = {
-  fatal_flaws: { flaw: string; severity: FlawSeverity; impact: string }[];
+  fatal_flaws: { title: string; severity: FlawSeverity; impact: string }[];
   survival_probability: string; // e.g. "35%"
 };
 
@@ -14,19 +14,23 @@ export function toPercent(value: unknown): string | null {
 }
 
 // Reads profiles.red_team_flaws defensively: null, missing fields or malformed JSON return null
-// (or drop the bad entries) instead of crashing the dashboard.
+// (or drop the bad entries) instead of crashing the dashboard. Critiques saved before the switch to
+// short titles used a "flaw" field, so that is read as the title too.
 export function parseRedTeamReport(value: unknown): RedTeamReport | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as { fatal_flaws?: unknown; survival_probability?: unknown };
 
   const fatal_flaws = (Array.isArray(raw.fatal_flaws) ? raw.fatal_flaws : [])
     .filter((f): f is Record<string, unknown> => Boolean(f) && typeof f === "object")
-    .map((f) => ({
-      flaw: typeof f.flaw === "string" ? f.flaw.trim() : "",
-      severity: (f.severity === "high" ? "high" : "medium") as FlawSeverity,
-      impact: typeof f.impact === "string" ? f.impact.trim() : "",
-    }))
-    .filter((f) => f.flaw);
+    .map((f) => {
+      const title = typeof f.title === "string" ? f.title : typeof f.flaw === "string" ? f.flaw : "";
+      return {
+        title: title.trim(),
+        severity: (String(f.severity).toLowerCase() === "high" ? "high" : "medium") as FlawSeverity,
+        impact: typeof f.impact === "string" ? f.impact.trim() : "",
+      };
+    })
+    .filter((f) => f.title);
 
   const survival_probability = toPercent(raw.survival_probability);
   if (!fatal_flaws.length && !survival_probability) return null;

@@ -3,6 +3,8 @@ export const EVIDENCE_TYPE_LABELS = {
   signed_contract: "Signed Contract",
   bank_statement: "Bank Statement",
   invoice: "Invoice",
+  business_registration: "Business Registration (BIPA)",
+  tax_good_standing: "Tax Good Standing (NamRA)",
   other: "Other",
 } as const;
 
@@ -18,12 +20,23 @@ export function isEvidenceType(value: unknown): value is EvidenceType {
 // Accepts a key ("signed_contract") or a label ("Signed Contract"), ignoring case and spacing.
 export function toEvidenceType(value: unknown): EvidenceType | null {
   if (typeof value !== "string") return null;
-  const normalised = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const trimmed = value.trim().toLowerCase();
+  const byLabel = (Object.keys(EVIDENCE_TYPE_LABELS) as EvidenceType[]).find(
+    (key) => EVIDENCE_TYPE_LABELS[key].toLowerCase() === trimmed
+  );
+  if (byLabel) return byLabel;
+  const normalised = trimmed.replace(/[\s-]+/g, "_");
   return isEvidenceType(normalised) ? normalised : null;
 }
 
 // Evidence types that are verified automatically on upload; "Other" is flagged for human review.
-export const AUTO_VERIFIED_TYPES: readonly EvidenceType[] = ["signed_contract", "bank_statement", "invoice"];
+export const AUTO_VERIFIED_TYPES: readonly EvidenceType[] = [
+  "signed_contract",
+  "bank_statement",
+  "invoice",
+  "business_registration",
+  "tax_good_standing",
+];
 
 // Prefixes the upload flow adds before the file name: a UUID (current) or a 13-digit timestamp (older rows).
 const UPLOAD_PREFIX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{13})-/i;

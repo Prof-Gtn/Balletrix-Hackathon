@@ -389,14 +389,14 @@ export async function validateDocument(text: string): Promise<DocumentValidation
 
 // --- Devil's Advocate (red team) ---------------------------------------------------------------
 
-const DEVILS_ADVOCATE_PROMPT = `You are a tough but fair business advisor. Explain the risks clearly. Do not be overly aggressive, but be direct. Return strict JSON: { "fatal_flaws": [{ "flaw": "string", "severity": "high" | "medium", "impact": "string" }], "survival_probability": "0-100%" }.`;
+const DEVILS_ADVOCATE_PROMPT = `You are a strict but fair business advisor. Identify the 3 most fatal flaws. Provide: 1. "title" (punchy, max 8 words). 2. "severity" ("High" or "Medium"). 3. "impact" (plain-English explanation, max 30 words). Return strict JSON: { "fatal_flaws": [{ "title": "string", "severity": "high" | "medium", "impact": "string" }], "survival_probability": "0-100%" }.`;
 
 const RedTeamSchema = z.object({
   fatal_flaws: z.array(
     z.object({
-      flaw: z.string(),
+      title: z.string().describe("Punchy, max 8 words"),
       severity: z.enum(["high", "medium"]),
-      impact: z.string(),
+      impact: z.string().describe("Plain English, max 30 words"),
     })
   ),
   survival_probability: z.string().describe('Percentage from "0%" to "100%"'),
