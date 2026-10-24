@@ -1,8 +1,8 @@
-// Evidence types a founder can upload. Keys are stored in evidence_submissions.evidence_type.
+// Evidence types a founder can upload, in dropdown order. Keys are stored in evidence_submissions.evidence_type.
 export const EVIDENCE_TYPE_LABELS = {
   signed_contract: "Signed Contract",
-  invoice: "Invoice",
   bank_statement: "Bank Statement",
+  invoice: "Invoice",
   other: "Other",
 } as const;
 
@@ -22,10 +22,12 @@ export function toEvidenceType(value: unknown): EvidenceType | null {
   return isEvidenceType(normalised) ? normalised : null;
 }
 
-// Evidence types that are verified automatically on upload.
-export const AUTO_VERIFIED_TYPES: readonly EvidenceType[] = ["signed_contract", "invoice"];
+// Evidence types that are verified automatically on upload; "Other" is flagged for human review.
+export const AUTO_VERIFIED_TYPES: readonly EvidenceType[] = ["signed_contract", "bank_statement", "invoice"];
 
-// Uploads are stored as <user id>/<timestamp>-<file name>; returns the original file name.
-export function fileNameFromPath(path: string): string {
-  return (path.split("/").pop() ?? path).replace(/^\d+-/, "");
+// file_url holds either a plain file name (no storage yet) or a storage path
+// (<user id>/<timestamp>-<file name>); returns the original file name in both cases.
+export function fileNameFromPath(fileUrl: string): string {
+  if (!fileUrl.includes("/")) return fileUrl;
+  return (fileUrl.split("/").pop() ?? fileUrl).replace(/^\d{13}-/, "");
 }

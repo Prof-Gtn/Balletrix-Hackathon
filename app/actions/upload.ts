@@ -4,8 +4,6 @@ import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type Evidenc
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "evidence";
-// Prefix for file_url when the file couldn't be stored (no 'evidence' bucket yet); the UI still shows the file name.
-const MOCK_STORAGE_PREFIX = "mock-storage";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export type EvidenceResult = { ok: true; message: string } | { ok: false; error: string };
@@ -53,16 +51,17 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     user_id: user.id,
     month: profile?.current_month ?? 1,
     evidence_type: evidenceType,
-    file_url: simulated ? `${MOCK_STORAGE_PREFIX}/${path}` : path,
+    // Without storage there is no file to point at, so keep just its name for the UI.
+    file_url: simulated ? file.name : path,
     ai_verification_status: status,
     ai_feedback:
       status === "verified"
         ? `${EVIDENCE_TYPE_LABELS[evidenceType]} accepted as proof of traction.`
-        : `${EVIDENCE_TYPE_LABELS[evidenceType]} needs manual review. A signed contract or an issued invoice is verified automatically.`,
+        : `${EVIDENCE_TYPE_LABELS[evidenceType]} is pending human review. Signed contracts, bank statements and invoices are verified automatically.`,
   });
   if (insertError) return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
 
-  const outcome = status === "verified" ? "verified" : "flagged for review";
+  const outcome = status === "verified" ? "verified" : "flagged for human review";
   return {
     ok: true,
     message: `"${file.name}" was ${outcome}.${simulated ? " (File storage is not set up yet, so the file itself was not stored.)" : ""}`,
