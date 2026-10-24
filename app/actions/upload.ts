@@ -3,7 +3,8 @@
 import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type EvidenceType } from "@/lib/evidence";
 import { createClient } from "@/lib/supabase/server";
 
-const BUCKET = "evidence";
+// Supabase bucket names are case-sensitive; this project's bucket is "Evidence".
+const BUCKET = "Evidence";
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export type EvidenceResult = { ok: true; message: string } | { ok: false; error: string };
