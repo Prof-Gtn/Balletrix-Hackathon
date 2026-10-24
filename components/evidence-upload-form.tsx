@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Loader2, Upload } from "lucide-react";
 import { submitEvidence, type EvidenceResult } from "@/app/actions/upload";
+import { EVIDENCE_TYPE_LABELS } from "@/lib/evidence";
 
 export function EvidenceUploadForm() {
   const router = useRouter();
@@ -33,6 +34,23 @@ export function EvidenceUploadForm() {
         Upload Evidence (Contracts, Invoices, Bank Statements)
       </label>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <select
+          name="evidence_type"
+          required
+          defaultValue=""
+          disabled={isPending}
+          aria-label="Evidence type"
+          className="rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900"
+        >
+          <option value="" disabled>
+            Evidence type…
+          </option>
+          {Object.entries(EVIDENCE_TYPE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
         <input
           id="evidence-file"
           name="file"

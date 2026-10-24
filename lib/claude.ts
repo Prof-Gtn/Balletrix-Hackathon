@@ -60,13 +60,14 @@ function meetsGate(month: IncubationMonth, a: Assessment): boolean {
   return a.readiness_score >= 80;
 }
 
-export type ScoreBonus = { readiness: number; scalability: number };
+// Added to the model's scores before the gate is checked (e.g. for verified evidence);
+// minScalability then raises scalability to at least that value.
+export type ScoreBonus = { readiness: number; scalability: number; minScalability: number };
 
-// The bonus is added to the model's scores before the gate is checked (e.g. for verified evidence).
 export async function assessBusiness(
   businessDescription: string,
   month: number,
-  bonus: ScoreBonus = { readiness: 0, scalability: 0 }
+  bonus: ScoreBonus = { readiness: 0, scalability: 0, minScalability: 0 }
 ): Promise<Assessment> {
   const currentMonth = Math.min(3, Math.max(1, Math.trunc(month) || 1)) as IncubationMonth;
 
@@ -99,7 +100,7 @@ export async function assessBusiness(
     readiness_score: clamp(raw.readiness_score + bonus.readiness, 100),
     scores: {
       innovation: clamp(raw.scores.innovation, 10),
-      scalability: clamp(raw.scores.scalability + bonus.scalability, 10),
+      scalability: clamp(Math.max(raw.scores.scalability + bonus.scalability, bonus.minScalability), 10),
       revenue_potential: clamp(raw.scores.revenue_potential, 10),
       profitability: clamp(raw.scores.profitability, 10),
     },

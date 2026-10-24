@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { CheckCircle2, FileText, ShieldAlert } from "lucide-react";
 import { AssessmentForm } from "@/components/assessment-form";
 import { EvidenceUploadForm } from "@/components/evidence-upload-form";
+import { EVIDENCE_TYPE_LABELS, isEvidenceType } from "@/lib/evidence";
 import { SignOutButton } from "@/components/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
 
   const { data: evidence, error: evidenceError } = await supabase
     .from("evidence_submissions")
-    .select("id, file_url, ai_verification_status, created_at")
+    .select("id, file_url, evidence_type, ai_verification_status, created_at")
     .eq("user_id", user.id)
     .not("file_url", "is", null)
     .order("created_at", { ascending: false });
@@ -87,7 +88,12 @@ export default async function DashboardPage() {
                   <li key={item.id} className="flex items-center justify-between gap-4 py-3">
                     <span className="flex min-w-0 items-center gap-2 text-sm">
                       <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
-                      <span className="truncate">{fileNameFromPath(item.file_url)}</span>
+                      <span className="min-w-0">
+                        <span className="block truncate">{fileNameFromPath(item.file_url)}</span>
+                        {isEvidenceType(item.evidence_type) && (
+                          <span className="block text-xs text-zinc-500">{EVIDENCE_TYPE_LABELS[item.evidence_type]}</span>
+                        )}
+                      </span>
                     </span>
                     <span
                       className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${

@@ -1,5 +1,6 @@
 "use server";
 
+import { EVIDENCE_TYPE_LABELS, isEvidenceType, type EvidenceType } from "@/lib/evidence";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "evidence";
@@ -7,15 +8,18 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export type EvidenceResult = { ok: true; message: string } | { ok: false; error: string };
 
-// Hackathon stand-in for AI document verification: trusts the file name.
-function simulateVerification(fileName: string): "verified" | "flagged" {
-  return /contract|invoice/i.test(fileName) ? "verified" : "flagged";
+// Hackathon stand-in for AI document verification: trusts the evidence type the user selects.
+function simulateVerification(type: EvidenceType): "verified" | "flagged" {
+  return type === "signed_contract" || type === "invoice" ? "verified" : "flagged";
 }
 
 export async function submitEvidence(formData: FormData): Promise<EvidenceResult> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Please choose a file to upload." };
   if (file.size > MAX_FILE_BYTES) return { ok: false, error: "File is too large. The limit is 10 MB." };
+
+  const evidenceType = formData.get("evidence_type");
+  if (!isEvidenceType(evidenceType)) return { ok: false, error: "Please select an evidence type." };
 
   const supabase = await createClient();
 
@@ -41,18 +45,18 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   const simulated = Boolean(uploadError);
   if (uploadError) console.warn(`Evidence upload to '${BUCKET}' failed, simulating instead:`, uploadError.message);
 
-  const status = simulateVerification(file.name);
+  const status = simulateVerification(evidenceType);
 
   const { error: insertError } = await supabase.from("evidence_submissions").insert({
     user_id: user.id,
     month: profile?.current_month ?? 1,
-    evidence_type: "document",
+    evidence_type: evidenceType,
     file_url: path,
     ai_verification_status: status,
     ai_feedback:
       status === "verified"
-        ? "Document recognised as a contract or invoice."
-        : "Could not confirm this is a contract or invoice. Upload a signed contract or an issued invoice.",
+        ? `${EVIDENCE_TYPE_LABELS[evidenceType]} accepted as proof of traction.`
+        : `${EVIDENCE_TYPE_LABELS[evidenceType]} needs manual review. A signed contract or an issued invoice is verified automatically.`,
   });
   if (insertError) return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
 

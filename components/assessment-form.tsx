@@ -151,7 +151,8 @@ function AssessmentReport({
         {evidenceBonus && evidenceBonus.readiness > 0 && (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            Includes +{evidenceBonus.readiness} Readiness and +{evidenceBonus.scalability} Scalability for verified evidence
+            Includes +{evidenceBonus.readiness} Readiness and +{evidenceBonus.scalability} Scalability (minimum{" "}
+            {evidenceBonus.minScalability}) for verified evidence
           </p>
         )}
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
