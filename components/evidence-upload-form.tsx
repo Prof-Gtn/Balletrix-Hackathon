@@ -45,7 +45,7 @@ export function EvidenceUploadForm() {
         required
         defaultValue=""
         disabled={isPending}
-        className="min-h-[52px] w-full rounded-2xl border border-[#dce3ee] bg-white px-4 text-[15px] text-ink outline-none transition focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a]"
+        className="min-h-[52px] w-full rounded-2xl border border-[#dce3ee] bg-white px-4 text-[15px] text-ink outline-none transition focus:border-[#fb923c] focus:shadow-[0_0_0_4px_#f973161a]"
       >
         <option value="" disabled>
           What kind of document is this?

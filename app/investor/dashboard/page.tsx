@@ -12,7 +12,7 @@ export default async function InvestorDashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/");
+  if (!user) redirect("/login");
 
   const { data, error } = await supabase
     .from("investor_preferences")
@@ -65,7 +65,7 @@ export default async function InvestorDashboardPage() {
               </dl>
             </div>
           )}
-          <div className="relative overflow-hidden rounded-2xl bg-[#151d35] p-[22px] text-white">
+          <div className="relative overflow-hidden rounded-2xl bg-[#1a202c] p-[22px] text-white">
             <GraduationCap className="mb-3 h-6 w-6 text-brand-light" />
             <h2 className="mb-2 text-base font-bold">How matching works</h2>
             <p className="text-[11px] leading-[1.6] text-[#c3c8dd]">

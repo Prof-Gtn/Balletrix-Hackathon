@@ -23,7 +23,7 @@ export function ActionPlan({ saved }: { saved: unknown }) {
   const steps = response?.result ? response.result.roadmap : parseRoadmap(saved);
 
   return (
-    <section className="rounded-3xl bg-[#151d35] p-5 text-white sm:p-7">
+    <section className="rounded-3xl bg-[#1a202c] p-5 text-white sm:p-7">
       <h3 className="flex items-center gap-2 text-lg font-extrabold">
         <ListChecks className="h-5 w-5 text-brand-light" /> Your Action Plan
       </h3>

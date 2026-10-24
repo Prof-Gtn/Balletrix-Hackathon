@@ -13,7 +13,7 @@ export type InvestorPreferences = {
 };
 
 const inputClass =
-  "h-[47px] w-full rounded-[11px] border border-[#dce3ee] bg-white px-3.5 text-[13px] text-ink outline-none transition placeholder:text-[#a2adbd] focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a] disabled:bg-canvas";
+  "h-[47px] w-full rounded-[11px] border border-[#dce3ee] bg-white px-3.5 text-[13px] text-ink outline-none transition placeholder:text-[#a2adbd] focus:border-[#fb923c] focus:shadow-[0_0_0_4px_#f973161a] disabled:bg-canvas";
 
 function Field({ label, id, hint, children }: { label: string; id: string; hint?: string; children: React.ReactNode }) {
   return (

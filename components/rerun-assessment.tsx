@@ -12,7 +12,7 @@ export function RerunAssessment() {
   const wizard = useWizard();
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl border-2 border-[#dcd8ff] bg-brand-soft/40 p-5 sm:p-7">
+    <div className="flex flex-col gap-4 rounded-3xl border-2 border-[#fed7aa] bg-brand-soft/40 p-5 sm:p-7">
       <div>
         <h3 className="text-lg font-extrabold">Uploaded new proof?</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">

@@ -93,7 +93,7 @@ export function DueDiligencePackage() {
               type="button"
               onClick={() => window.print()}
               disabled={loading}
-              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[11px] border border-[#d9d4ff] bg-brand-soft px-4 text-xs font-semibold text-brand-dark transition hover:bg-[#e4e0ff] disabled:opacity-60"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[11px] border border-[#fed7aa] bg-brand-soft px-4 text-xs font-semibold text-brand-dark transition hover:bg-[#ffedd5] disabled:opacity-60"
             >
               <Download className="h-4 w-4" />
               Download as PDF

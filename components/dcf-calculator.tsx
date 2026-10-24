@@ -8,7 +8,7 @@ import { formatNad } from "@/lib/investors";
 const YEARS = [1, 2, 3] as const;
 
 const inputClass =
-  "h-[47px] w-full rounded-[11px] border border-[#dce3ee] bg-white pr-3.5 pl-11 text-[13px] text-ink outline-none transition placeholder:text-[#a2adbd] focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a] disabled:bg-canvas";
+  "h-[47px] w-full rounded-[11px] border border-[#dce3ee] bg-white pr-3.5 pl-11 text-[13px] text-ink outline-none transition placeholder:text-[#a2adbd] focus:border-[#fb923c] focus:shadow-[0_0_0_4px_#f973161a] disabled:bg-canvas";
 
 // 0.255 -> "25.5"
 const percent = (rate: number) => String(Math.round(rate * 1000) / 10);
@@ -77,7 +77,7 @@ export function DCFCalculator() {
         )}
       </form>
 
-      <div className="relative flex min-h-[220px] flex-col justify-between overflow-hidden rounded-2xl bg-[#151d35] p-[22px] text-white">
+      <div className="relative flex min-h-[220px] flex-col justify-between overflow-hidden rounded-2xl bg-[#1a202c] p-[22px] text-white">
         <div aria-hidden className="absolute right-[18px] -bottom-3 rotate-[-15deg] text-[70px] font-black opacity-[0.12]">
           N$
         </div>
@@ -89,7 +89,7 @@ export function DCFCalculator() {
         ) : result ? (
           <>
             <div>
-              <p className="text-[11px] tracking-[1.2px] text-[#a99aff] uppercase">Estimated valuation</p>
+              <p className="text-[11px] tracking-[1.2px] text-[#fdba74] uppercase">Estimated valuation</p>
               <p className="mt-1 text-[clamp(30px,4vw,42px)] font-extrabold tracking-[-1px]">{formatNad(result.valuation)}</p>
               {result.valuation < 0 && (
                 <p className="text-[11px] text-[#ffb3c0]">Negative: the projected cash flows destroy value at this discount rate.</p>
@@ -120,7 +120,7 @@ export function DCFCalculator() {
           </>
         ) : (
           <div className="relative">
-            <p className="text-[11px] tracking-[1.2px] text-[#a99aff] uppercase">Estimated valuation</p>
+            <p className="text-[11px] tracking-[1.2px] text-[#fdba74] uppercase">Estimated valuation</p>
             <p className="mt-1 text-[clamp(30px,4vw,42px)] font-extrabold tracking-[-1px] text-white/30">N$ —</p>
             <p className="mt-3 max-w-[300px] text-[11px] leading-[1.6] text-[#c3c8dd]">
               Your valuation will appear here, with the rates the AI used and why.

@@ -85,7 +85,7 @@ export function AssessmentForm() {
             disabled={isPending}
             placeholder="For example: I sell kapana at the Single Quarters market, 6 days a week. About 120 customers a day spend N$35 each…"
             className={cn(
-              "resize-y rounded-2xl border border-[#dce3ee] bg-white px-4 py-3.5 text-[15px] leading-relaxed outline-none transition placeholder:text-[#a2adbd] focus:border-[#8175fa] focus:shadow-[0_0_0_4px_#6557f51a] disabled:bg-canvas",
+              "resize-y rounded-2xl border border-[#dce3ee] bg-white px-4 py-3.5 text-[15px] leading-relaxed outline-none transition placeholder:text-[#a2adbd] focus:border-[#fb923c] focus:shadow-[0_0_0_4px_#f973161a] disabled:bg-canvas",
               planFile && "opacity-50"
             )}
           />
@@ -99,7 +99,7 @@ export function AssessmentForm() {
             htmlFor="business-plan-file"
             className={cn(
               "flex min-h-[72px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-3 transition",
-              planFile ? "border-brand bg-brand-soft/50" : "border-[#dce3ee] bg-canvas hover:border-[#c9c3ff]",
+              planFile ? "border-brand bg-brand-soft/50" : "border-[#dce3ee] bg-canvas hover:border-[#fdba74]",
               isPending && "pointer-events-none opacity-60"
             )}
           >
@@ -147,20 +147,32 @@ export function AssessmentForm() {
           <ResultSummary result={result} evidenceBonus={evidenceBonus} />
 
           {!result.weaknesses.length || result.gate_status === "PASSED" ? null : (
-            <div>
-              <h3 className="text-base font-bold">Why your score is low</h3>
-              <ul className="mt-3 flex flex-col gap-3">
+            <section className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-sm">
+              <div className="flex items-center gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white px-5 py-4">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-500 text-white">
+                  <AlertTriangle className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">Why your score is low</h3>
+                  <p className="text-xs text-gray-500">Fix these and your score goes up.</p>
+                </div>
+              </div>
+              <ol className="divide-y divide-gray-100">
                 {result.weaknesses.map((weakness, i) => (
-                  <li key={i} className="flex gap-3 text-sm leading-relaxed text-[#3c4a62]">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
-                    <span>
-                      <span className="mr-1.5 font-bold text-ink">{criterionLabel(weakness.criterion)}:</span>
-                      {weakness.reason}
+                  <li key={i} className="flex gap-4 px-5 py-4">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange-50 text-xs font-bold text-orange-600">
+                      {i + 1}
                     </span>
+                    <div className="min-w-0">
+                      <span className="mb-1 inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-600 uppercase">
+                        {criterionLabel(weakness.criterion)}
+                      </span>
+                      <p className="text-sm leading-relaxed text-slate-700">{weakness.reason}</p>
+                    </div>
                   </li>
                 ))}
-              </ul>
-            </div>
+              </ol>
+            </section>
           )}
 
           <EvidenceFlags flags={result.evidence_flags} />

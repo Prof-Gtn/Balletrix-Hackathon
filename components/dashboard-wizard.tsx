@@ -71,7 +71,7 @@ export function DashboardWizard({ steps, initialStep }: { steps: WizardStep[]; i
                   "flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-center transition sm:flex-row sm:justify-start sm:gap-3 sm:px-4 sm:text-left",
                   isActive
                     ? "border-brand bg-white shadow-card"
-                    : "border-transparent bg-white/60 hover:border-[#dcd8ff] hover:bg-white"
+                    : "border-transparent bg-white/60 hover:border-[#fed7aa] hover:bg-white"
                 )}
               >
                 <span

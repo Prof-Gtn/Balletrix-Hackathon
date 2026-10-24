@@ -3,28 +3,75 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --color-navy: #0b1220;
-  --color-navy-2: #101827;
-  --color-ink: #17243b;
-  --color-muted: #75839b;
-  --color-line: #e7ecf4;
-  --color-canvas: #f4f7fc;
-  --color-brand: #6557f5;
-  --color-brand-dark: #5145cd;
-  --color-brand-soft: #eeebff;
-  --color-brand-light: #a99aff;
-  --color-success: #0f9f78;
-  --color-success-soft: #e4f8f1;
+  /* Palette from the MulaStream AI HTML template: navy sidebar/hero, orange accents, emerald actions. */
+  --color-navy: #1a202c;
+  --color-navy-2: #0f172a;
+  --color-navy-3: #2d3748;
+  --color-ink: #1e293b;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
+  --color-canvas: #f9fafb;
+  --color-brand: #f97316;
+  --color-brand-dark: #ea580c;
+  --color-brand-soft: #fff7ed;
+  --color-brand-light: #fdba74;
+  --color-emerald: #10b981;
+  --color-emerald-dark: #059669;
+  --color-success: #10b981;
+  --color-success-soft: #ecfdf5;
   --color-danger: #e05268;
   --color-danger-soft: #ffebef;
   --color-warning: #b7791f;
   --color-warning-soft: #fff6e0;
-  --color-info: #3978df;
-  --color-info-soft: #e8f2ff;
+  --color-info: #2563eb;
+  --color-info-soft: #eff6ff;
 
-  --shadow-card: 0 5px 18px #1d31500a;
-  --shadow-soft: 0 14px 38px rgba(22, 37, 66, 0.08);
-  --shadow-brand: 0 3px 8px #6557f520;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-brand: 0 3px 8px #f9731630;
+}
+
+/* The template's premium gradient panel (auth screens): dark navy into orange, with two soft glows. */
+.investment-bg {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 40%, #f97316 150%);
+  position: relative;
+  overflow: hidden;
+}
+.investment-bg::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(124, 163, 202, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.investment-bg::after {
+  content: "";
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* Thin scrollbars, as in the template. */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 body {
