@@ -10,16 +10,28 @@ import { Sidebar } from "@/components/Sidebar";
 // (which has its own layout).
 const BARE_PATHS = ["/", "/login", "/signup", "/onboarding"];
 const BARE_PREFIXES = ["/investor", "/auth"];
+// Public pages that still get the floating chat (the MulaStream assistant for visitors).
+const PUBLIC_CHAT_PATHS = ["/", "/login", "/signup"];
 
 export function isBarePath(pathname: string): boolean {
   return BARE_PATHS.includes(pathname) || BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-export function AppShell({ name, children }: { name: string; children: React.ReactNode }) {
+export function AppShell({ name, isLoggedIn, children }: { name: string; isLoggedIn: boolean; children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const firstName = name.split(/\s+/)[0];
 
-  if (isBarePath(pathname)) return <>{children}</>;
+  if (isBarePath(pathname)) {
+    return (
+      <>
+        {children}
+        {PUBLIC_CHAT_PATHS.includes(pathname) && (
+          <ChatWidget mode={isLoggedIn ? "member" : "guest"} firstName={firstName} />
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -29,7 +41,7 @@ export function AppShell({ name, children }: { name: string; children: React.Rea
         <main className="pb-24">{children}</main>
       </div>
       {/* /mentor is already the full chat, so the floating widget would duplicate it there. */}
-      {pathname !== "/mentor" && <ChatWidget firstName={name.split(/\s+/)[0]} />}
+      {pathname !== "/mentor" && <ChatWidget mode="member" firstName={firstName} />}
     </div>
   );
 }

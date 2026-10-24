@@ -9,6 +9,9 @@ export const SECTORS = [
   "Logistics",
   "Energy",
   "Manufacturing",
+  "Agro-Processing",
+  "Textiles & Apparel",
+  "Crafts & Jewellery",
   "Other",
 ] as const;
 

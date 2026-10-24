@@ -3,37 +3,54 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
 import { Bot, CheckCheck, Loader2, SendHorizontal, X } from "lucide-react";
-import { sendMentorMessage } from "@/app/actions/mentor";
+import { sendGuestMessage, sendMentorMessage } from "@/app/actions/mentor";
 import { cn } from "@/lib/utils";
 
 type ChatMessage = { role: "user" | "assistant"; content: string; time: string };
 
-const SUGGESTIONS = [
-  "How do I pass the Month 1 gate?",
-  "How should I price my product?",
-  "Which documents should I upload?",
-  "How do I keep simple business records?",
-];
+// "member": the context-aware AI Mentor for logged-in users. "guest": the public MulaStream assistant.
+export type ChatMode = "member" | "guest";
+
+const MODES = {
+  member: {
+    title: "MulaStream AI Mentor",
+    greeting: (firstName: string) =>
+      `Hi ${firstName}! 👋 I'm your MulaStream AI Mentor. Ask me anything about growing your business or using MulaStream.`,
+    suggestions: [
+      "How do I pass the Month 1 gate?",
+      "How should I price my product?",
+      "Which documents should I upload?",
+      "How do I keep simple business records?",
+    ],
+    send: sendMentorMessage,
+  },
+  guest: {
+    title: "MulaStream Assistant",
+    greeting: () =>
+      "Hi there! 👋 I'm the MulaStream assistant. Ask me what MulaStream does, how debt and equity funding work, or how to sign up.",
+    suggestions: ["What is MulaStream?", "Debt vs equity: what's the difference?", "How do I sign up?", "Is MulaStream for my business?"],
+    send: sendGuestMessage,
+  },
+} as const;
 
 const now = () => new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
 
-// WhatsApp-style chat with the AI Mentor, used full-page on /mentor and in the floating widget.
+// WhatsApp-style chat, used full-page on /mentor and in the floating widget.
 // The conversation lives in the browser only and is not saved.
 export function MentorChat({
-  firstName,
+  firstName = "",
+  mode = "member",
   variant = "page",
   onClose,
 }: {
-  firstName: string;
+  firstName?: string;
+  mode?: ChatMode;
   variant?: "page" | "widget";
   onClose?: () => void;
 }) {
+  const config = MODES[mode];
   const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: `Hi ${firstName}! 👋 I'm your MulaStream AI Mentor. Ask me anything about growing your business or using MulaStream.`,
-      time: now(),
-    },
+    { role: "assistant", content: config.greeting(firstName), time: now() },
   ]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +71,7 @@ export function MentorChat({
 
     startTransition(async () => {
       // The greeting is UI only; the model's conversation starts with the user's first message.
-      const res = await sendMentorMessage(next.slice(1).map(({ role, content }) => ({ role, content })));
+      const res = await config.send(next.slice(1).map(({ role, content }) => ({ role, content })));
       if (res.ok) setMessages((prev) => [...prev, { role: "assistant", content: res.reply, time: now() }]);
       else setError(res.error);
     });
@@ -74,14 +91,17 @@ export function MentorChat({
           <Bot className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">AI Mentor</p>
+          <p className="truncate text-sm font-semibold">{config.title}</p>
           <p className="flex items-center gap-1.5 text-xs text-emerald-100">
             {isPending ? (
               <>
                 <Loader2 className="h-3 w-3 animate-spin" /> typing…
               </>
             ) : (
-              "online"
+              <>
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.25)]" aria-hidden />
+                Online
+              </>
             )}
           </p>
         </div>
@@ -129,7 +149,7 @@ export function MentorChat({
 
         {messages.length === 1 && !isPending && (
           <div className="flex flex-wrap gap-2 pt-2">
-            {SUGGESTIONS.map((s) => (
+            {config.suggestions.map((s) => (
               <button
                 key={s}
                 type="button"

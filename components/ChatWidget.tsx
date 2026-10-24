@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
-import { MentorChat } from "@/components/mentor-chat";
+import { MentorChat, type ChatMode } from "@/components/mentor-chat";
 import { cn } from "@/lib/utils";
 
-// Floating AI Mentor chat for every protected page. It lives in the app shell, so the conversation
-// stays open across page changes. The mentor's replies are personalised on the server with the user's
-// business name, sector and readiness score (see app/actions/mentor.ts).
-export function ChatWidget({ firstName }: { firstName: string }) {
+// Floating chat bubble. Logged-in users get the AI Mentor, personalised on the server with their
+// business name, sector and readiness score (app/actions/mentor.ts); visitors get the public
+// MulaStream assistant. It lives in the app shell, so the conversation stays open across page changes.
+export function ChatWidget({ mode, firstName = "" }: { mode: ChatMode; firstName?: string }) {
   const [open, setOpen] = useState(false);
   // Keep the chat mounted after the first open so closing the panel doesn't lose the conversation.
   const [mounted, setMounted] = useState(false);
@@ -25,11 +25,13 @@ export function ChatWidget({ firstName }: { firstName: string }) {
     setOpen((v) => !v);
   }
 
+  const label = mode === "member" ? "AI Mentor" : "MulaStream assistant";
+
   return (
     <>
       <div
         role="dialog"
-        aria-label="AI Mentor chat"
+        aria-label={`${label} chat`}
         aria-hidden={!open}
         className={cn(
           "fixed z-50 overflow-hidden bg-white shadow-2xl transition duration-200",
@@ -38,13 +40,14 @@ export function ChatWidget({ firstName }: { firstName: string }) {
           open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
         )}
       >
-        {mounted && <MentorChat firstName={firstName} variant="widget" onClose={() => setOpen(false)} />}
+        {/* Keyed by mode so logging in or out starts a fresh conversation with the right assistant. */}
+        {mounted && <MentorChat key={mode} mode={mode} firstName={firstName} variant="widget" onClose={() => setOpen(false)} />}
       </div>
 
       <button
         type="button"
         onClick={toggle}
-        aria-label={open ? "Close AI Mentor chat" : "Chat with your AI Mentor"}
+        aria-label={open ? `Close ${label} chat` : `Chat with the ${label}`}
         aria-expanded={open}
         className={cn(
           "fixed right-4 bottom-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition hover:scale-105 hover:bg-emerald-600 sm:right-6 sm:bottom-6",

@@ -1,20 +1,6 @@
-// Right-hand side of the split auth screens: the template's premium navy-to-orange gradient.
+// Right-hand side of the split auth screens: the template's premium navy-to-orange gradient with the
+// MulaStream AI logo.
 export function AuthPanel({ variant }: { variant: "login" | "signup" }) {
-  if (variant === "signup") {
-    return (
-      <div className="investment-bg hidden flex-col justify-end p-12 md:flex md:w-1/2">
-        <div className="relative z-10">
-          <h2 className="mb-2 text-3xl font-bold text-white">
-            Build Today.
-            <br />
-            Grow Tomorrow.
-          </h2>
-          <div className="mt-4 h-1 w-16 rounded-full bg-orange-500" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="investment-bg hidden flex-col items-center justify-center p-12 md:flex md:w-1/2">
       <div className="relative z-10 flex flex-col items-center">
@@ -27,16 +13,24 @@ export function AuthPanel({ variant }: { variant: "login" | "signup" }) {
             <polygon points="65,70 75,70 75,20 70,10 65,20" fill="#f97316" />
           </svg>
         </div>
-        <p className="text-[2rem] leading-none font-extrabold tracking-[3px] text-orange-500">INVESTMENT</p>
-        <p className="mt-2 text-[0.65rem] font-medium tracking-[7px] text-slate-400">BUILD · PROVE · GROW</p>
+        <p className="text-[2rem] leading-none font-extrabold tracking-[2px] text-orange-500">MulaStream AI</p>
+        <p className="mt-3 text-xs font-medium tracking-[4px] text-slate-400">Build · Prove · Grow</p>
         <div className="mt-10 h-1 w-12 rounded-full bg-orange-500" />
-        <p className="mt-6 max-w-xs text-center text-sm leading-relaxed font-medium text-slate-200">
-          Empowering Entrepreneurs.
-          <br />
-          Connecting Investors.
-          <br />
-          Building a Stronger Future.
-        </p>
+        {variant === "signup" ? (
+          <p className="mt-6 text-center text-2xl font-bold text-white">
+            Build Today.
+            <br />
+            Grow Tomorrow.
+          </p>
+        ) : (
+          <p className="mt-6 max-w-xs text-center text-sm leading-relaxed font-medium text-slate-200">
+            Empowering Entrepreneurs.
+            <br />
+            Connecting Investors.
+            <br />
+            Building a Stronger Future.
+          </p>
+        )}
       </div>
     </div>
   );
