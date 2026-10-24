@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-gray-50 font-sans text-slate-800 antialiased">
-        <AppShell name={name} isLoggedIn={Boolean(user)}>
+        <AppShell name={name} email={user?.email ?? ""} isLoggedIn={Boolean(user)}>
           {children}
         </AppShell>
       </body>

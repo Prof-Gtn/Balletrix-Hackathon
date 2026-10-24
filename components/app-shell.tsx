@@ -19,7 +19,17 @@ export function isBarePath(pathname: string): boolean {
   return BARE_PATHS.includes(pathname) || BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-export function AppShell({ name, isLoggedIn, children }: { name: string; isLoggedIn: boolean; children: React.ReactNode }) {
+export function AppShell({
+  name,
+  email,
+  isLoggedIn,
+  children,
+}: {
+  name: string;
+  email: string;
+  isLoggedIn: boolean;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const firstName = name.split(/\s+/)[0];
@@ -39,7 +49,7 @@ export function AppShell({ name, isLoggedIn, children }: { name: string; isLogge
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="min-w-0 flex-1">
-        <Header name={name} onMenu={() => setMenuOpen(true)} />
+        <Header name={name} email={email} onMenu={() => setMenuOpen(true)} />
         <main className="pb-24">{children}</main>
       </div>
       {/* /mentor and /support already have the full chat, so the floating widget would duplicate it. */}
