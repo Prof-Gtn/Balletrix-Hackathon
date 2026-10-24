@@ -36,14 +36,23 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     .maybeSingle();
   if (profileError) return { ok: false, error: `Could not load your profile: ${profileError.message}` };
 
-  // Stored as <user id>/<timestamp>-<file name>; the dashboard shows the part after the timestamp.
+  // <user id>/<uuid>-<file name>: the UUID keeps names unique, and the user folder lets storage
+  // policies restrict each user to their own files.
   const safeName = file.name.replace(/[^\w.\- ]+/g, "_");
-  const path = `${user.id}/${Date.now()}-${safeName}`;
+  const filePath = `${user.id}/${crypto.randomUUID()}-${safeName}`;
 
-  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type });
-  // Until the 'evidence' bucket exists, keep going with metadata only so the flow can still be demoed.
-  const simulated = Boolean(uploadError);
-  if (uploadError) console.warn(`Evidence upload to '${BUCKET}' failed, saving metadata only:`, uploadError.message);
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET)
+    .upload(filePath, file, { contentType: file.type || undefined });
+  if (uploadError) {
+    // Surface the storage error as-is (e.g. an RLS policy violation or a size limit) so it can be diagnosed.
+    console.error(`Evidence upload to '${BUCKET}' failed`, uploadError);
+    return { ok: false, error: `Upload failed: ${uploadError.message}` };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
 
   const status = simulateVerification(evidenceType);
 
@@ -51,19 +60,19 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     user_id: user.id,
     month: profile?.current_month ?? 1,
     evidence_type: evidenceType,
-    // Without storage there is no file to point at, so keep just its name for the UI.
-    file_url: simulated ? file.name : path,
+    file_url: publicUrl,
     ai_verification_status: status,
     ai_feedback:
       status === "verified"
         ? `${EVIDENCE_TYPE_LABELS[evidenceType]} accepted as proof of traction.`
         : `${EVIDENCE_TYPE_LABELS[evidenceType]} is pending human review. Signed contracts, bank statements and invoices are verified automatically.`,
   });
-  if (insertError) return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
+  if (insertError) {
+    // Best effort: don't leave an orphaned file in storage when the database row couldn't be saved.
+    await supabase.storage.from(BUCKET).remove([filePath]);
+    return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
+  }
 
   const outcome = status === "verified" ? "verified" : "flagged for human review";
-  return {
-    ok: true,
-    message: `"${file.name}" was ${outcome}.${simulated ? " (File storage is not set up yet, so the file itself was not stored.)" : ""}`,
-  };
+  return { ok: true, message: `"${file.name}" was uploaded and ${outcome}.` };
 }

@@ -25,9 +25,19 @@ export function toEvidenceType(value: unknown): EvidenceType | null {
 // Evidence types that are verified automatically on upload; "Other" is flagged for human review.
 export const AUTO_VERIFIED_TYPES: readonly EvidenceType[] = ["signed_contract", "bank_statement", "invoice"];
 
-// file_url holds either a plain file name (no storage yet) or a storage path
-// (<user id>/<timestamp>-<file name>); returns the original file name in both cases.
+// Prefixes the upload flow adds before the file name: a UUID (current) or a 13-digit timestamp (older rows).
+const UPLOAD_PREFIX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{13})-/i;
+
+// file_url holds a storage public URL, an older storage path (<user id>/<timestamp>-<file name>)
+// or a plain file name; returns the original file name in every case.
 export function fileNameFromPath(fileUrl: string): string {
   if (!fileUrl.includes("/")) return fileUrl;
-  return (fileUrl.split("/").pop() ?? fileUrl).replace(/^\d{13}-/, "");
+  const lastSegment = fileUrl.split("?")[0].split("/").pop() ?? fileUrl;
+  let decoded = lastSegment;
+  try {
+    decoded = decodeURIComponent(lastSegment);
+  } catch {
+    // Not URL-encoded; use as-is.
+  }
+  return decoded.replace(UPLOAD_PREFIX, "");
 }
