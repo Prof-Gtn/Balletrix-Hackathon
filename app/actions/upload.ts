@@ -1,6 +1,8 @@
 "use server";
 
+import { reconcileFinancials } from "@/lib/claude";
 import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type EvidenceType } from "@/lib/evidence";
+import { extractPdfText, isPdf } from "@/lib/pdf";
 import { createClient } from "@/lib/supabase/server";
 
 // Hardcoded while debugging "Bucket not found"; Supabase bucket ids are case-sensitive.
@@ -12,6 +14,66 @@ export type EvidenceResult = { ok: true; message: string } | { ok: false; error:
 // Hackathon stand-in for AI document verification: trusts the evidence type the user selects.
 function simulateVerification(type: EvidenceType): "verified" | "flagged" {
   return AUTO_VERIFIED_TYPES.includes(type) ? "verified" : "flagged";
+}
+
+type ReconciliationStatus = "reconciled" | "failed" | "not_applicable" | null;
+
+type EvidenceCheck = {
+  status: "verified" | "flagged";
+  reconciliationStatus: ReconciliationStatus;
+  feedback: string;
+};
+
+// Financial reconciliation (fraud hunter) for bank statements: reads the PDF's text and asks the
+// forensic accountant agent for total deposits. A bank statement is only verified if it reconciles.
+async function checkBankStatement(file: File): Promise<EvidenceCheck> {
+  let text = "";
+  if (isPdf(file)) {
+    try {
+      text = await extractPdfText(file);
+    } catch (error) {
+      console.error("PDF text extraction failed", error);
+    }
+  }
+  if (!text) {
+    return {
+      status: "flagged",
+      reconciliationStatus: "failed",
+      feedback:
+        "No readable text was found in this bank statement. Upload it as a text-based PDF exported from your bank, not a scan or photo.",
+    };
+  }
+
+  try {
+    const result = await reconcileFinancials(text);
+    return {
+      status: result.reconciled ? "verified" : "flagged",
+      reconciliationStatus: result.reconciled ? "reconciled" : "failed",
+      feedback: result.reason,
+    };
+  } catch (error) {
+    // The agent couldn't run (e.g. an API error): leave reconciliation pending rather than raise a fraud alert.
+    console.error("reconcileFinancials failed", error);
+    return {
+      status: "flagged",
+      reconciliationStatus: null,
+      feedback: "Automatic reconciliation could not run. This bank statement is pending review.",
+    };
+  }
+}
+
+async function checkEvidence(type: EvidenceType, file: File): Promise<EvidenceCheck> {
+  if (type === "bank_statement") return checkBankStatement(file);
+
+  const status = simulateVerification(type);
+  return {
+    status,
+    reconciliationStatus: "not_applicable",
+    feedback:
+      status === "verified"
+        ? `${EVIDENCE_TYPE_LABELS[type]} accepted as proof of traction.`
+        : `${EVIDENCE_TYPE_LABELS[type]} is pending human review. Signed contracts, bank statements and invoices are verified automatically.`,
+  };
 }
 
 export async function submitEvidence(formData: FormData): Promise<EvidenceResult> {
@@ -59,18 +121,16 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     data: { publicUrl },
   } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
-  const status = simulateVerification(evidenceType);
+  const check = await checkEvidence(evidenceType, file);
 
   const { error: insertError } = await supabase.from("evidence_submissions").insert({
     user_id: user.id,
     month: profile?.current_month ?? 1,
     evidence_type: evidenceType,
     file_url: publicUrl,
-    ai_verification_status: status,
-    ai_feedback:
-      status === "verified"
-        ? `${EVIDENCE_TYPE_LABELS[evidenceType]} accepted as proof of traction.`
-        : `${EVIDENCE_TYPE_LABELS[evidenceType]} is pending human review. Signed contracts, bank statements and invoices are verified automatically.`,
+    ai_verification_status: check.status,
+    ai_feedback: check.feedback,
+    reconciliation_status: check.reconciliationStatus,
   });
   if (insertError) {
     // Best effort: don't leave an orphaned file in storage when the database row couldn't be saved.
@@ -78,6 +138,14 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     return { ok: false, error: `Could not save your evidence: ${insertError.message}` };
   }
 
-  const outcome = status === "verified" ? "verified" : "flagged for human review";
+  if (check.reconciliationStatus === "failed") {
+    return { ok: true, message: `"${file.name}" was uploaded but failed financial reconciliation: ${check.feedback}` };
+  }
+  const outcome =
+    check.reconciliationStatus === "reconciled"
+      ? "reconciled and verified"
+      : check.status === "verified"
+        ? "verified"
+        : "flagged for human review";
   return { ok: true, message: `"${file.name}" was uploaded and ${outcome}.` };
 }

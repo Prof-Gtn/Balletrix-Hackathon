@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
-import { Briefcase, Calculator, CheckCircle2, FileText, Gauge, Handshake, Layers, ShieldAlert, ShieldCheck, Target } from "lucide-react";
+import { Briefcase, Calculator, CheckCircle2, FileText, Gauge, Handshake, Layers, ShieldAlert, ShieldCheck, Siren, Target } from "lucide-react";
 import { AssessmentForm } from "@/components/assessment-form";
 import { DCFCalculator } from "@/components/dcf-calculator";
 import { DashboardSidebar, initials } from "@/components/dashboard-sidebar";
 import { DueDiligencePackage } from "@/components/due-diligence-package";
 import { EvidenceUploadForm } from "@/components/evidence-upload-form";
+import { RedTeamCard } from "@/components/red-team-card";
 import { SignOutButton } from "@/components/sign-out-button";
-import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
+import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, toEvidenceType } from "@/lib/evidence";
 import { GATE_REQUIREMENTS, toIncubationMonth } from "@/lib/gates";
 import { formatNad, INSTRUMENTS, isInstrument, MOCK_ENTREPRENEUR_SECTOR } from "@/lib/investors";
 import { createClient } from "@/lib/supabase/server";
@@ -39,10 +40,12 @@ export default async function DashboardPage() {
   if (!user) redirect("/");
 
   const [{ data: profile, error }, { data: evidence, error: evidenceError }] = await Promise.all([
-    supabase.from("profiles").select("current_month, readiness_score, business_name").eq("id", user.id).maybeSingle(),
+    // "*" rather than a column list: red_team_flaws and reconciliation_status only exist once the
+    // red team migration has run, and naming them before that would fail the whole query.
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase
       .from("evidence_submissions")
-      .select("id, file_url, evidence_type, month, ai_verification_status, created_at")
+      .select("*")
       .eq("user_id", user.id)
       .neq("evidence_type", ASSESSMENT_EVIDENCE_TYPE)
       .not("file_url", "is", null)
@@ -141,6 +144,9 @@ export default async function DashboardPage() {
             <section id="assessment" className={cn(panelClass, "scroll-mt-4")}>
               <PanelHead title="AI Investment Audit" />
               <AssessmentForm currentMonth={currentMonth} />
+              <div className="mt-5">
+                <RedTeamCard data={profile?.red_team_flaws ?? null} />
+              </div>
             </section>
 
             <div className="flex min-w-0 flex-col gap-[18px]">
@@ -155,29 +161,46 @@ export default async function DashboardPage() {
                   <ul>
                     {evidence.map((item) => {
                       const verified = item.ai_verification_status === "verified";
+                      const fraudAlert = item.reconciliation_status === "failed";
+                      const type = toEvidenceType(item.evidence_type);
                       return (
-                        <li key={item.id} className="flex items-center gap-[11px] border-b border-[#f0f2f7] py-[13px] last:border-b-0 last:pb-0">
-                          <div
-                            className={cn(
-                              "grid h-[39px] w-[39px] shrink-0 place-items-center rounded-[13px]",
-                              verified ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
-                            )}
-                          >
-                            <FileText className="h-[15px] w-[15px]" />
+                        <li key={item.id} className="border-b border-[#f0f2f7] py-[13px] last:border-b-0 last:pb-0">
+                          <div className="flex items-center gap-[11px]">
+                            <div
+                              className={cn(
+                                "grid h-[39px] w-[39px] shrink-0 place-items-center rounded-[13px]",
+                                verified ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
+                              )}
+                            >
+                              <FileText className="h-[15px] w-[15px]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-[5px] flex min-w-0 items-center gap-1.5">
+                                <b className="truncate text-xs">{fileNameFromPath(item.file_url)}</b>
+                                {fraudAlert && (
+                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#ff1f3d] px-2 py-0.5 text-[9px] font-extrabold tracking-wide text-white uppercase shadow-[0_0_0_3px_#ff1f3d26]">
+                                    <Siren className="h-3 w-3" /> Fraud Alert
+                                  </span>
+                                )}
+                              </div>
+                              <small className="text-[10px] text-[#8b98aa]">
+                                {type ? EVIDENCE_TYPE_LABELS[type] : "Document"} · Month{" "}
+                                {item.month}
+                                {item.reconciliation_status === "reconciled" && <span className="text-success"> · Reconciled</span>}
+                              </small>
+                            </div>
+                            <div className="text-right whitespace-nowrap">
+                              <b className={cn("mb-[5px] block text-xs", verified ? "text-success" : "text-danger")}>
+                                {verified ? "Verified" : "Flagged"}
+                              </b>
+                              <small className="text-[9px] text-[#96a2b3]">{formatDate(item.created_at)}</small>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <b className="mb-[5px] block truncate text-xs">{fileNameFromPath(item.file_url)}</b>
-                            <small className="text-[10px] text-[#8b98aa]">
-                              {isEvidenceType(item.evidence_type) ? EVIDENCE_TYPE_LABELS[item.evidence_type] : "Document"} · Month{" "}
-                              {item.month}
-                            </small>
-                          </div>
-                          <div className="text-right whitespace-nowrap">
-                            <b className={cn("mb-[5px] block text-xs", verified ? "text-success" : "text-danger")}>
-                              {verified ? "Verified" : "Flagged"}
-                            </b>
-                            <small className="text-[9px] text-[#96a2b3]">{formatDate(item.created_at)}</small>
-                          </div>
+                          {fraudAlert && item.ai_feedback && (
+                            <p className="mt-2 ml-[50px] rounded-lg border border-[#ff1f3d]/30 bg-danger-soft px-2.5 py-1.5 text-[11px] leading-relaxed text-[#9b2a3d]">
+                              {item.ai_feedback}
+                            </p>
+                          )}
                         </li>
                       );
                     })}

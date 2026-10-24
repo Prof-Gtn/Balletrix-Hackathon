@@ -1,6 +1,13 @@
 "use server";
 
-import { assessBusiness, NO_BONUS, type Assessment, type ScoreBonus, type SubmittedEvidence } from "@/lib/claude";
+import {
+  assessBusiness,
+  NO_BONUS,
+  runDevilsAdvocate,
+  type Assessment,
+  type ScoreBonus,
+  type SubmittedEvidence,
+} from "@/lib/claude";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,13 +63,18 @@ export async function runAssessment(businessDescription: string): Promise<Assess
   const hasVerifiedThisMonth = evidence.some((e) => e.month === currentMonth && e.status === "verified");
   const bonus = hasVerifiedThisMonth ? VERIFIED_EVIDENCE_BONUS : NO_BONUS;
 
-  let result: Assessment;
-  try {
-    result = await assessBusiness(description, currentMonth, { bonus, evidence });
-  } catch (error) {
-    console.error("assessBusiness failed", error);
+  // The Devil's Advocate runs alongside the main assessment to save time, but its result is only
+  // saved once the main assessment has succeeded.
+  const [assessment, redTeam] = await Promise.allSettled([
+    assessBusiness(description, currentMonth, { bonus, evidence }),
+    runDevilsAdvocate(description),
+  ]);
+
+  if (assessment.status === "rejected") {
+    console.error("assessBusiness failed", assessment.reason);
     return { ok: false, error: "The AI assessment failed. Please try again in a moment." };
   }
+  const result: Assessment = assessment.value;
 
   const passed = result.gate_status === "PASSED";
   const disqualified = result.gate_status === "DISQUALIFIED";
@@ -90,6 +102,18 @@ export async function runAssessment(businessDescription: string): Promise<Assess
     .eq("id", user.id);
   if (updateError) {
     return { ok: false, error: `Assessment completed but your progress could not be saved: ${updateError.message}`, result };
+  }
+
+  // Saved separately so a red team failure (or a missing red_team_flaws column) never blocks the
+  // score and month update above. The dashboard keeps showing the previous critique in that case.
+  if (redTeam.status === "fulfilled") {
+    const { error: redTeamError } = await supabase
+      .from("profiles")
+      .update({ red_team_flaws: redTeam.value })
+      .eq("id", user.id);
+    if (redTeamError) console.error("Saving red_team_flaws failed", redTeamError);
+  } else {
+    console.error("runDevilsAdvocate failed", redTeam.reason);
   }
 
   return { ok: true, result, evidenceBonus };
