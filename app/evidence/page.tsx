@@ -1,5 +1,6 @@
 import { Download, FileCheck2, FileText, FileWarning, Sparkles } from "lucide-react";
-import { EvidenceTable, isChecked } from "@/components/evidence-list";
+import { isChecked } from "@/components/evidence-list";
+import { EvidenceTable } from "@/components/evidence-table";
 import { EvidenceUploadForm } from "@/components/evidence-upload-form";
 import { GLOSSARY, InfoTip } from "@/components/info-tip";
 import { Card, PageTitle } from "@/components/page-title";
