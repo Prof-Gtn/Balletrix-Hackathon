@@ -34,7 +34,7 @@ export function ChatWidget({ mode, firstName = "" }: { mode: ChatMode; firstName
         aria-label={`${label} chat`}
         aria-hidden={!open}
         className={cn(
-          "fixed z-50 overflow-hidden bg-white shadow-2xl transition duration-200",
+          "no-print fixed z-50 overflow-hidden bg-white shadow-2xl transition duration-200",
           // Full screen on phones, a pop-up window above the bubble on larger screens.
           "inset-0 sm:inset-auto sm:right-6 sm:bottom-24 sm:h-[min(620px,calc(100vh-8rem))] sm:w-[400px] sm:rounded-2xl sm:border sm:border-gray-200",
           open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"

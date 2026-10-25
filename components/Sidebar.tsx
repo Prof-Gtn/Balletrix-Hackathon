@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
-import { GLOSSARY, InfoTip } from "@/components/info-tip";
+import { GLOSSARY, InfoTip, TRUST_PACK } from "@/components/info-tip";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
     { href: "/assessment", label: "Assessment", icon: ClipboardCheck },
     { href: "/evidence", label: "Evidence Centre", icon: ShieldHalf, tip: { term: "Evidence Centre", text: GLOSSARY.evidence } },
     { href: "/incubation", label: "Incubation Programme", icon: Rocket },
-    { href: "/reports", label: "Reports", icon: BarChart3, tip: { term: "Due Diligence", text: GLOSSARY.dueDiligence } },
+    { href: "/reports", label: "Reports", icon: BarChart3, tip: { term: TRUST_PACK.name, text: GLOSSARY.trustPack } },
     { href: "/gamification", label: "Gamification", icon: Trophy },
     MENTOR,
     SUPPORT,
@@ -61,11 +61,11 @@ export function Sidebar({ open, onClose, role }: { open: boolean; onClose: () =>
       <div
         aria-hidden
         onClick={onClose}
-        className={cn("fixed inset-0 z-30 bg-navy-2/60 transition-opacity md:hidden", open ? "opacity-100" : "pointer-events-none opacity-0")}
+        className={cn("no-print fixed inset-0 z-30 bg-navy-2/60 transition-opacity md:hidden", open ? "opacity-100" : "pointer-events-none opacity-0")}
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col justify-between bg-navy text-white transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0",
+          "no-print fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col justify-between bg-navy text-white transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

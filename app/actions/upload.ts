@@ -3,6 +3,7 @@
 import { reconcileFinancials } from "@/lib/claude";
 import { AUTO_VERIFIED_TYPES, EVIDENCE_TYPE_LABELS, toEvidenceType, type EvidenceType } from "@/lib/evidence";
 import { extractPdfText, isPdf } from "@/lib/pdf";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 // The storage bucket id, which is case-sensitive: uploads use the id, not the display name.
@@ -25,8 +26,9 @@ type EvidenceCheck = {
 };
 
 // Financial reconciliation (fraud hunter) for bank statements: reads the PDF's text and asks the
-// forensic accountant agent for total deposits. A bank statement is only verified if it reconciles.
-async function checkBankStatement(file: File): Promise<EvidenceCheck> {
+// forensic accountant agent to check its deposits against the revenue the founder claims. A bank
+// statement is only verified if it reconciles.
+async function checkBankStatement(file: File, businessDescription: string): Promise<EvidenceCheck> {
   let text = "";
   if (isPdf(file)) {
     try {
@@ -45,7 +47,7 @@ async function checkBankStatement(file: File): Promise<EvidenceCheck> {
   }
 
   try {
-    const result = await reconcileFinancials(text);
+    const result = await reconcileFinancials(businessDescription, text);
     return {
       status: result.reconciled ? "verified" : "flagged",
       reconciliationStatus: result.reconciled ? "reconciled" : "failed",
@@ -62,8 +64,8 @@ async function checkBankStatement(file: File): Promise<EvidenceCheck> {
   }
 }
 
-async function checkEvidence(type: EvidenceType, file: File): Promise<EvidenceCheck> {
-  if (type === "bank_statement") return checkBankStatement(file);
+async function checkEvidence(type: EvidenceType, file: File, businessDescription: string): Promise<EvidenceCheck> {
+  if (type === "bank_statement") return checkBankStatement(file, businessDescription);
 
   const status = simulateVerification(type);
   return {
@@ -92,11 +94,8 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
   } = await supabase.auth.getUser();
   if (authError || !user) return { ok: false, error: "You must be logged in to upload evidence." };
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("current_month")
-    .eq("id", user.id)
-    .maybeSingle();
+  // "*" so uploads still work if the business_description column's migration hasn't run.
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (profileError) return { ok: false, error: `Could not load your profile: ${profileError.message}` };
 
   // <user id>/<uuid>-<file name>: the UUID keeps names unique, and the user folder lets storage
@@ -117,9 +116,13 @@ export async function submitEvidence(formData: FormData): Promise<EvidenceResult
     data: { publicUrl },
   } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
-  const check = await checkEvidence(evidenceType, file);
+  // The Fraud Hunter checks a bank statement's deposits against the revenue the founder described.
+  const check = await checkEvidence(evidenceType, file, String(profile?.business_description ?? ""));
 
-  const { error: insertError } = await supabase.from("evidence_submissions").insert({
+  // Users can't write a "verified" row themselves (database trigger), so the server saves the checked
+  // result with the service role, scoped to this user. Without the key it falls back to the user's session.
+  const serverWriter = createAdminClient() ?? supabase;
+  const { error: insertError } = await serverWriter.from("evidence_submissions").insert({
     user_id: user.id,
     month: profile?.current_month ?? 1,
     evidence_type: evidenceType,

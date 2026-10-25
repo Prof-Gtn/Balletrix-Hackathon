@@ -79,30 +79,64 @@ body {
   color: var(--color-ink);
 }
 
-/* "Download as PDF" prints only the generated document that was clicked (marked .print-target). */
+/* Printing. Elements are removed from the layout (display: none), not just made invisible: invisible
+   elements still take up space, which pushed the report down and printed blank pages before it. */
 @media print {
   @page {
     margin: 14mm;
   }
+  html,
   body {
-    background: white;
+    background: white !important;
+    color: black !important;
   }
-  /* The document whose "Download as PDF" was clicked gets .print-target; everything else is hidden. */
-  body:has(.print-target) * {
-    visibility: hidden;
+
+  /* App chrome never prints: sidebar, header, floating chat, and every button. */
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  /* The main content and its wrappers fill the page. */
+  .print-main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  /* "Download as PDF" marks the clicked document with .print-target: only it and the elements that
+     contain it stay in the layout, and those wrappers lose their spacing, borders and shadows. */
+  body:has(.print-target) *:not(:has(.print-target)):not(.print-target):not(.print-target *) {
+    display: none !important;
+  }
+  body:has(.print-target) *:has(.print-target) {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    display: block !important;
+  }
+  .print-target {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
   }
   .print-target,
   .print-target * {
-    visibility: visible;
-  }
-  .print-target {
-    position: absolute;
-    inset: 0 0 auto 0;
-    max-width: none;
-    border: 0;
-    box-shadow: none;
-    padding: 0;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    color: black !important;
   }
 }

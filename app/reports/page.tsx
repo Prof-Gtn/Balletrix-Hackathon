@@ -3,11 +3,12 @@ import { BarChart3, Calculator, CheckCircle2, Presentation, XCircle } from "luci
 import { DCFCalculator } from "@/components/dcf-calculator";
 import { DueDiligencePackage, PitchDeckOutline } from "@/components/due-diligence-package";
 import { isChecked } from "@/components/evidence-list";
+import { GLOSSARY, InfoTip, TRUST_PACK } from "@/components/info-tip";
 import { Card, PageTitle } from "@/components/page-title";
 import { loadEntrepreneur } from "@/lib/entrepreneur";
 import type { EvidenceType } from "@/lib/evidence";
 
-// What investors expect to see in a due diligence pack, matched to the Evidence Centre's document types.
+// What investors expect to see in an Investor Trust Pack (due diligence pack), matched to the Evidence Centre's document types.
 const CHECKLIST: { label: string; type: EvidenceType; hint: string }[] = [
   { label: "Business Registration (BIPA)", type: "business_registration", hint: "Your BIPA registration certificate" },
   { label: "Tax Good Standing (NamRA)", type: "tax_good_standing", hint: "A NamRA certificate of good standing" },
@@ -25,14 +26,18 @@ export default async function ReportsPage() {
       <PageTitle title="Reports" subtitle="Professional documents for investors, written from your checked evidence and AI assessment." />
 
       <Card>
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-          <BarChart3 className="h-5 w-5 text-orange-500" /> Due Diligence Package
-        </h2>
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2 text-lg font-bold">
+            <BarChart3 className="h-5 w-5 text-orange-500" /> {TRUST_PACK.name}
+            <InfoTip text={GLOSSARY.trustPack} label={TRUST_PACK.name} />
+          </h2>
+          <p className="text-sm text-gray-500">{TRUST_PACK.subtitle}</p>
+        </div>
         <DueDiligencePackage />
 
         <div className="mt-6 border-t border-gray-100 pt-6">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-bold text-slate-800">Due Diligence Checklist</h3>
+            <h3 className="font-bold text-slate-800">{TRUST_PACK.name} Checklist</h3>
             <p className="text-sm text-gray-500">
               {done} of {CHECKLIST.length} documents verified
             </p>

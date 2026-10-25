@@ -6,7 +6,7 @@ import { DCFCalculator } from "@/components/dcf-calculator";
 import { DueDiligencePackage } from "@/components/due-diligence-package";
 import { EvidenceList } from "@/components/evidence-list";
 import { EvidenceUploadForm } from "@/components/evidence-upload-form";
-import { GLOSSARY, InfoTip } from "@/components/info-tip";
+import { GLOSSARY, InfoTip, TRUST_PACK } from "@/components/info-tip";
 import { PageTitle } from "@/components/page-title";
 import { RedTeamCard } from "@/components/red-team-card";
 import { ASSESSMENT_EVIDENCE_TYPE } from "@/lib/evidence";
@@ -119,7 +119,7 @@ export default async function AssessmentPage() {
                     You reached Month 3. Prepare your investor package and see who invests in your sector.
                   </p>
                 </div>
-                <FundingBlock icon={Briefcase} title="Due Diligence Package" tip={GLOSSARY.dueDiligence}>
+                <FundingBlock icon={Briefcase} title={TRUST_PACK.name} subtitle={TRUST_PACK.subtitle} tip={GLOSSARY.trustPack}>
                   <DueDiligencePackage />
                 </FundingBlock>
                 <FundingBlock icon={Handshake} title="Matched Investors" aside={`Sector: ${MOCK_ENTREPRENEUR_SECTOR}`}>
@@ -151,22 +151,27 @@ function FundingBlock({
   icon: Icon,
   title,
   aside,
+  subtitle,
   tip,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   aside?: string;
+  subtitle?: string;
   tip?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="border-t border-gray-100 pt-8">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-lg font-bold">
-          <Icon className="h-5 w-5 text-brand" /> {title}
-          {tip && <InfoTip text={tip} label={title} />}
-        </h3>
+        <div>
+          <h3 className="flex items-center gap-2 text-lg font-bold">
+            <Icon className="h-5 w-5 text-brand" /> {title}
+            {tip && <InfoTip text={tip} label={title} />}
+          </h3>
+          {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
+        </div>
         {aside && <span className="rounded-lg border border-line px-2.5 py-1 text-xs text-[#68768c]">{aside}</span>}
       </div>
       {children}

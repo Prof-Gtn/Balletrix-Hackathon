@@ -3,11 +3,14 @@ import { cn } from "@/lib/utils";
 
 // Plain-language explanations for the jargon first-time founders meet most often.
 export const GLOSSARY = {
-  dueDiligence: "The documents investors need to see before they give you money.",
+  trustPack: "The documents investors need to see before they give you money.",
   evidence: "Upload your proof here (receipts, contracts, bank statements).",
   readinessScore: "A score out of 100 showing how ready you are for investment.",
   gate: "A checkpoint. You must pass this to move to the next month.",
 } as const;
+
+// What the UI calls the due diligence package (the code, API routes and database keep "due diligence").
+export const TRUST_PACK = { name: "Investor Trust Pack", subtitle: "The proof investors need to fund you." } as const;
 
 // A small "?" that shows its explanation on hover, or on tap/keyboard focus (phones have no hover).
 // Never put it inside a link or button: it is a button itself.

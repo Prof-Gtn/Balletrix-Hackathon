@@ -153,7 +153,12 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   // assessBusiness never applies the bonus to a disqualified submission.
   const evidenceBonus = disqualified ? NO_BONUS : bonus;
 
-  const { error: evidenceError } = await supabase.from("evidence_submissions").insert({
+  // Users can't write a "verified" evidence row or change their own score and month (database triggers),
+  // so the server saves the assessment record and progress with the service role, scoped to this user.
+  // Without the key it falls back to the user's own session.
+  const serverWriter = createAdminClient() ?? supabase;
+
+  const { error: evidenceError } = await serverWriter.from("evidence_submissions").insert({
     user_id: user.id,
     month: currentMonth,
     evidence_type: ASSESSMENT_EVIDENCE_TYPE,
@@ -165,10 +170,7 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   }
 
   // The score always reflects the latest assessment; the month only advances when the gate is passed.
-  // Users can't change these two columns themselves (database trigger), so the server writes them with
-  // the service role, scoped to this user. Without the key it falls back to the user's own session.
-  const progressWriter = createAdminClient() ?? supabase;
-  const { error: updateError } = await progressWriter
+  const { error: updateError } = await serverWriter
     .from("profiles")
     .update({
       readiness_score: result.overall_score,
@@ -183,6 +185,13 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   // or a red team failure never blocks the score and month update above.
   const { error: roadmapError } = await supabase.from("profiles").update({ roadmap: result.roadmap }).eq("id", user.id);
   if (roadmapError) console.error("Saving roadmap failed", roadmapError);
+
+  // Separate again, so the score is never lost if the twelve_week_plan migration hasn't run.
+  const { error: planError } = await supabase
+    .from("profiles")
+    .update({ twelve_week_plan: result.twelve_week_plan })
+    .eq("id", user.id);
+  if (planError) console.error("Saving twelve_week_plan failed", planError);
 
   if (redTeam) {
     const { error: redTeamError } = await supabase.from("profiles").update({ red_team_flaws: redTeam }).eq("id", user.id);

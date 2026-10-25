@@ -27,7 +27,7 @@ export const PHASES: Record<IncubationMonth, { name: string; focus: string; mile
     focus: "Get ready to talk to investors.",
     milestones: [
       "Complete your business profile",
-      "Generate your Due Diligence Package",
+      "Generate your Investor Trust Pack",
       "Meet investors interested in your sector",
     ],
     gate: GATE_REQUIREMENTS[3].summary,

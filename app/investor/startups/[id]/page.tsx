@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BadgeCheck, FileLock2, Info, MapPin, Target, TrendingUp, Users } from "lucide-react";
 import { DueDiligencePackage } from "@/components/due-diligence-package";
+import { TRUST_PACK } from "@/components/info-tip";
 import { loadReadyStartups, requireInvestor } from "@/lib/investor";
 import { findShowcaseStartup, sectorOutlook } from "@/lib/showcase";
 
@@ -46,10 +47,10 @@ export default async function StartupProfilePage({ params }: { params: Promise<{
             />
           </Panel>
         </div>
-        <Panel title="Due Diligence Package">
+        <Panel title={TRUST_PACK.name} subtitle={TRUST_PACK.subtitle}>
           <div className="flex items-start gap-3 text-sm text-gray-600">
             <FileLock2 className="h-5 w-5 shrink-0 text-gray-400" />
-            No due diligence pack is available for sample profiles. A verified pack is created once a business completes
+            No Investor Trust Pack is available for sample profiles. A verified pack is created once a business completes
             MulaStream&apos;s three-month programme.
           </div>
         </Panel>
@@ -68,7 +69,7 @@ export default async function StartupProfilePage({ params }: { params: Promise<{
         subtitle={`${startup.sector || "Sector not set"} · Month ${startup.current_month ?? 3} of 3`}
         badge={
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white">
-            <BadgeCheck className="h-3.5 w-3.5" /> Verified DD Pack
+            <BadgeCheck className="h-3.5 w-3.5" /> Verified Trust Pack
           </span>
         }
         score={Math.round(Number(startup.readiness_score ?? 0))}
@@ -88,7 +89,7 @@ export default async function StartupProfilePage({ params }: { params: Promise<{
           />
         </Panel>
       </div>
-      <Panel title="Due Diligence Package">
+      <Panel title={TRUST_PACK.name} subtitle={TRUST_PACK.subtitle}>
         <DueDiligencePackage startupId={startup.id} />
       </Panel>
     </Layout>
@@ -124,10 +125,13 @@ function ProfileHeader({ name, subtitle, badge, score }: { name: string; subtitl
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-lg font-bold text-slate-800">{title}</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-bold text-slate-800">{title}</h2>
+        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+      </div>
       {children}
     </section>
   );

@@ -10,7 +10,7 @@ export function BadgeGrid({ badges }: { badges: Badge[] }) {
   const [open, setOpen] = useState<string | null>(null);
 
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {badges.map((badge) => {
         const isOpen = open === badge.id;
         const percent = Math.round((badge.current / badge.target) * 100);
@@ -22,7 +22,7 @@ export function BadgeGrid({ badges }: { badges: Badge[] }) {
               aria-expanded={isOpen}
               className={cn(
                 "flex h-full w-full flex-col rounded-xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none",
-                badge.earned ? "border-yellow-200" : "border-gray-100",
+                badge.earned ? "border-orange-200 shadow-lg shadow-orange-500/20" : "border-gray-100 bg-gray-50/60",
                 isOpen && "ring-2 ring-orange-500"
               )}
             >
@@ -47,10 +47,12 @@ export function BadgeGrid({ badges }: { badges: Badge[] }) {
                 </p>
               ) : (
                 <div className="mt-4">
-                  <div className="h-2 rounded-full bg-gray-100">
-                    <div className="h-2 rounded-full bg-orange-400" style={{ width: `${percent}%` }} />
+                  <div className="h-2 rounded-full bg-gray-200">
+                    <div className="h-2 rounded-full bg-gray-400" style={{ width: `${percent}%` }} />
                   </div>
-                  <p className="mt-1.5 text-xs text-gray-500">{badge.progressLabel}</p>
+                  <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-500">
+                    <Lock className="h-3 w-3" /> {badge.progressLabel}
+                  </p>
                 </div>
               )}
 

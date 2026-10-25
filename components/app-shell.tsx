@@ -51,11 +51,11 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="print-main flex min-h-screen bg-gray-50">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} role={role} />
-      <div className="min-w-0 flex-1">
+      <div className="print-main min-w-0 flex-1">
         <Header name={name} email={email} role={role} language={language} onMenu={() => setMenuOpen(true)} />
-        <main className="pb-24">{children}</main>
+        <main className="print-main pb-24">{children}</main>
       </div>
       {/* /mentor and /support already have the full chat, so the floating widget would duplicate it. */}
       {!FULL_CHAT_PATHS.includes(pathname) && <ChatWidget mode="member" firstName={firstName} />}

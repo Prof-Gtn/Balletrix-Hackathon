@@ -4,7 +4,7 @@ import { loadMember } from "@/lib/entrepreneur";
 
 const SUPPORT_EMAIL = "support@mulastream.com";
 
-const QUICK_REPLIES = ["How do I pass Month 1?", "What is a Due Diligence Pack?", "How do I upload evidence?"];
+const QUICK_REPLIES = ["How do I pass Month 1?", "What is an Investor Trust Pack?", "How do I upload evidence?"];
 
 const FAQS: { question: string; answer: React.ReactNode }[] = [
   {

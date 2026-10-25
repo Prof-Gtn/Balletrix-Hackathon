@@ -99,7 +99,7 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
         >
           {startup.kind === "platform" ? (
             <>
-              <BadgeCheck className="h-3.5 w-3.5" /> Verified DD Pack
+              <BadgeCheck className="h-3.5 w-3.5" /> Verified Trust Pack
             </>
           ) : (
             "Sample profile"
@@ -165,7 +165,7 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
             href={startup.href}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
         >
-            View Full Profile &amp; DD <ArrowRight className="h-4 w-4" />
+            View Profile &amp; Trust Pack <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

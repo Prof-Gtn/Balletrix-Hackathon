@@ -71,7 +71,7 @@ export function Header({
   }
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 md:px-8">
+    <header className="no-print sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 md:px-8">
       <div className="flex items-center gap-3">
         <button type="button" onClick={onMenu} aria-label="Open menu" className="text-slate-600 md:hidden">
           <Menu className="h-6 w-6" />

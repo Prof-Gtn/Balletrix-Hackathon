@@ -112,7 +112,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
             <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-slate-800">
               <ShieldCheck className="h-5 w-5 text-emerald-500" /> Verified on MulaStream
             </h2>
-            <p className="mb-5 text-sm text-gray-500">Startups that passed all three gates, each with an AI-audited due diligence pack.</p>
+            <p className="mb-5 text-sm text-gray-500">Startups that passed all three gates, each with an AI-audited Investor Trust Pack.</p>
             {startupsError ? (
               <p className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
                 We couldn&apos;t load startups: {startupsError}. If you&apos;re the administrator, run the investor marketplace
@@ -142,7 +142,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
               <p className="mb-5 flex items-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 These businesses are not MulaStream users. They have not been assessed or verified by MulaStream, highlights are as
-                publicly reported, and no due diligence pack exists for them.
+                publicly reported, and no Investor Trust Pack exists for them.
               </p>
               <div className="grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
                 {samples.map((card) => (
