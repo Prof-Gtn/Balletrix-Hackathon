@@ -80,14 +80,19 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
             founder claims, and passes three monthly gates before it appears here.
           </p>
           <dl className="mt-8 grid max-w-2xl grid-cols-3 gap-4">
-            <Stat label="Verified startups" value={String(platformCards.length)} />
+            <Stat
+              label="Verified startups"
+              value={String(platformCards.length)}
+              hint={platformCards.length === 0 && !startupsError ? "Startups appear here after passing Month 3." : undefined}
+            />
             <Stat label="Average readiness" value={averageScore === null ? "—" : `${averageScore}/100`} />
             <Stat label="Sectors" value={String(new Set([...platformCards, ...sampleCards].map((c) => c.sector)).size)} />
           </dl>
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-7xl gap-8 p-4 md:p-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+      {/* pb-24 keeps Save Preferences and the last cards clear of the floating chat bubble. */}
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 pt-4 pb-24 md:px-8 md:pt-8 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-10">
           {filterSector && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm">
@@ -115,8 +120,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
             <p className="mb-5 text-sm text-gray-500">Startups that passed all three gates, each with an AI-audited Investor Trust Pack.</p>
             {startupsError ? (
               <p className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-                We couldn&apos;t load startups: {startupsError}. If you&apos;re the administrator, run the investor marketplace
-                migration in Supabase.
+                We couldn&apos;t load startups. {startupsError}
               </p>
             ) : platform.length ? (
               <div className="grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
@@ -128,9 +132,9 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
               <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-10 text-center">
                 <Rocket className="mx-auto mb-3 h-8 w-8 text-gray-300" />
                 <p className="font-medium text-slate-700">
-                  {filterSector ? `No verified ${filterSector} startups yet` : "No verified startups yet"}
+                  {filterSector ? `No ${filterSector} startups are investment-ready yet.` : "No startups are investment-ready yet."}
                 </p>
-                <p className="mt-1 text-sm text-gray-500">Startups appear here once they reach Month 3 of the incubation programme.</p>
+                <p className="mt-1 text-sm text-gray-500">They will appear here once they pass Month 3.</p>
               </div>
             )}
           </section>
@@ -138,7 +142,10 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
           {samples.length > 0 && (
             <section>
               <h2 className="mb-1 text-xl font-bold text-slate-800">Featured Namibian businesses</h2>
-              <p className="mb-3 text-sm text-gray-500">Sample profiles for this demo, showing the kinds of businesses MulaStream supports.</p>
+              <p className="mb-3 text-sm text-gray-500">
+                {samples.length} sample {samples.length === 1 ? "profile" : "profiles"} for this demo, showing the kinds of businesses
+                MulaStream supports. Photos are illustrative, not of the businesses themselves.
+              </p>
               <p className="mb-5 flex items-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 These businesses are not MulaStream users. They have not been assessed or verified by MulaStream, highlights are as
@@ -173,11 +180,12 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
       <dt className="text-xs text-slate-400">{label}</dt>
       <dd className="mt-1 text-2xl font-bold">{value}</dd>
+      {hint && <dd className="mt-1 text-[11px] leading-snug text-slate-300">{hint}</dd>}
     </div>
   );
 }

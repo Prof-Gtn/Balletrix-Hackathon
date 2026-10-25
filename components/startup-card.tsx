@@ -6,6 +6,7 @@ import {
   Factory,
   FlaskConical,
   Gem,
+  Info,
   MapPin,
   Shirt,
   ShoppingBag,
@@ -70,8 +71,20 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
       {/* Image area: the business's own photo when provided, otherwise a branded gradient tile. */}
       <div className={cn("relative h-40 overflow-hidden bg-gradient-to-br", gradientFor(startup.businessName))}>
         {startup.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={startup.imageUrl} alt={startup.businessName} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <>
+            {/* Sample profiles use illustrative sector photos, so they're labelled and have no alt text naming the business. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={startup.imageUrl}
+              alt={startup.kind === "sample" ? "" : startup.businessName}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+            {startup.kind === "sample" && (
+              <span className="absolute right-3 bottom-3 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/90">
+                Illustrative photo
+              </span>
+            )}
+          </>
         ) : (
           <>
             <div
@@ -93,8 +106,8 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
         </div>
         <span
           className={cn(
-            "absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            startup.kind === "platform" ? "bg-emerald-500 text-white" : "bg-black/40 text-white backdrop-blur"
+            "absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-md",
+            startup.kind === "platform" ? "bg-emerald-500 text-white" : "bg-amber-400 font-bold tracking-wide text-slate-900 uppercase"
           )}
         >
           {startup.kind === "platform" ? (
@@ -102,7 +115,9 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
               <BadgeCheck className="h-3.5 w-3.5" /> Verified Trust Pack
             </>
           ) : (
-            "Sample profile"
+            <>
+              <Info className="h-3.5 w-3.5" /> Sample profile
+            </>
           )}
         </span>
       </div>

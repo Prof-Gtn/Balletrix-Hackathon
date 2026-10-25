@@ -26,7 +26,9 @@ export function sectorOutlook(sector: string | null | undefined): string {
 // have no assessment, no verified documents and no due diligence pack, and the UI labels them as
 // samples. Highlights are as reported publicly and have not been checked by MulaStream.
 // Before showing them publicly, get each business's permission. If they agree, you can add
-// `readinessScore` (from a real MulaStream assessment) and `imageUrl` (a photo you have rights to use).
+// `readinessScore` (from a real MulaStream assessment).
+// `imageUrl` is an illustrative Unsplash photo of the sector, NOT of the business; the card labels it as
+// such. Replace it with the business's own photo if they give you one. No image = a branded tile.
 export type ShowcaseStartup = {
   slug: string;
   businessName: string;
@@ -50,6 +52,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Handcrafted jewellery and gemstones",
     highlights: ["Award-winning designs", "Sells to lodges"],
     about: "A Windhoek jewellery business making handcrafted pieces with Namibian gemstones, selling through lodges to the tourism market.",
+    imageUrl: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: gemstone pendant
   },
   {
     slug: "karakulia-weavers",
@@ -60,6 +63,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Textiles and weaving",
     highlights: ["Turnaround success story", "DBN funded"],
     about: "A Swakopmund weaving workshop producing handwoven textiles, described as a turnaround success with development finance support.",
+    imageUrl: "https://images.unsplash.com/photo-1600166898405-da9535204843?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: woven carpet
   },
   {
     slug: "lunde-trading",
@@ -70,6 +74,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Garment manufacturing (school uniforms)",
     highlights: ["Sanlam Bridge winner", "Expanding production"],
     about: "A Walvis Bay garment manufacturer focused on school uniforms, serving steady institutional demand and growing its capacity.",
+    imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: rack of garments
   },
   {
     slug: "kokeni-ppi-chilli",
@@ -80,6 +85,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Chilli sauces",
     highlights: ["Exporting to China", "AMTA partnership"],
     about: "An Ondangwa agro-processor turning locally grown chillies into bottled sauces, reported to be exporting and working with AMTA.",
+    imageUrl: "https://images.unsplash.com/photo-1526346698789-22fd84314424?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: red chillies
   },
   {
     slug: "langas-agricultural-business",

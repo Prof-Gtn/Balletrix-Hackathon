@@ -29,8 +29,27 @@ export async function requireInvestor() {
   return { supabase, user };
 }
 
+// "TypeError: fetch failed" and similar: the server couldn't reach Supabase at all (network, DNS, or the
+// project waking up), as opposed to an error returned by the database.
+function isNetworkError(message: string | undefined): boolean {
+  return Boolean(message && /fetch failed|network|ECONNRESET|ETIMEDOUT|ENOTFOUND/i.test(message));
+}
+
+const NETWORK_ERROR = "We couldn't reach the database just now. Check your internet connection and refresh the page.";
+
 // Startups that reached Month 3, via a database function that only returns rows to investors.
+// It has to be a function: profiles are private under RLS, so a direct query from an investor's session
+// would return no other users' rows. A dropped connection is retried once before showing an error.
 export async function loadReadyStartups(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data, error } = await supabase.rpc("get_investment_ready_startups");
-  return { startups: (data ?? []) as ReadyStartup[], error: error?.message ?? null };
+  let result = await supabase.rpc("get_investment_ready_startups");
+  if (isNetworkError(result.error?.message)) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    result = await supabase.rpc("get_investment_ready_startups");
+  }
+  const { data, error } = result;
+  if (error) console.error("get_investment_ready_startups failed", error);
+  return {
+    startups: (data ?? []) as ReadyStartup[],
+    error: error ? (isNetworkError(error.message) ? NETWORK_ERROR : error.message) : null,
+  };
 }
