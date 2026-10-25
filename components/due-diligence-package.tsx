@@ -112,18 +112,25 @@ function MarkdownDocumentGenerator({
 }) {
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A friendly explanation instead of a document, e.g. a startup with no evidence to write about yet.
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const articleRef = useRef<HTMLElement>(null);
 
   async function generate() {
     setLoading(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         ...(requestBody && { headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) }),
       });
-      const body = (await res.json().catch(() => ({}))) as { markdown?: string; error?: string };
+      const body = (await res.json().catch(() => ({}))) as { markdown?: string; notice?: string; error?: string };
+      if (res.ok && body.notice) {
+        setNotice(body.notice);
+        return;
+      }
       if (!res.ok || !body.markdown) throw new Error(body.error ?? "The document could not be generated.");
       setMarkdown(body.markdown);
     } catch (err) {
@@ -187,6 +194,13 @@ function MarkdownDocumentGenerator({
         <div className="flex items-start gap-3 rounded-xl bg-danger-soft p-4 text-[13px] text-danger" role="alert">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           {error}
+        </div>
+      )}
+
+      {notice && !loading && (
+        <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-[13px] leading-relaxed text-slate-700" role="status">
+          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+          {notice}
         </div>
       )}
 

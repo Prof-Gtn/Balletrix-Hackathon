@@ -6,7 +6,6 @@ import {
   Factory,
   FlaskConical,
   Gem,
-  Info,
   MapPin,
   Shirt,
   ShoppingBag,
@@ -104,22 +103,6 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
             </span>
           )}
         </div>
-        <span
-          className={cn(
-            "absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-md",
-            startup.kind === "platform" ? "bg-emerald-500 text-white" : "bg-amber-400 font-bold tracking-wide text-slate-900 uppercase"
-          )}
-        >
-          {startup.kind === "platform" ? (
-            <>
-              <BadgeCheck className="h-3.5 w-3.5" /> Verified Trust Pack
-            </>
-          ) : (
-            <>
-              <Info className="h-3.5 w-3.5" /> Sample profile
-            </>
-          )}
-        </span>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -173,6 +156,12 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
         )}
 
         <div className="mt-5 grid gap-2">
+          {/* Only real MulaStream startups get the badge; sample cards are explained by their section's disclaimer. */}
+          {startup.kind === "platform" && (
+            <p className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-1.5 text-xs font-semibold text-emerald-700">
+              <BadgeCheck className="h-3.5 w-3.5" /> Verified Trust Pack
+            </p>
+          )}
           {startup.entrepreneurId && (
             <ExpressInterestButton entrepreneurId={startup.entrepreneurId} interested={Boolean(startup.interested)} />
           )}

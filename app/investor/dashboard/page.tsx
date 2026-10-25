@@ -4,7 +4,7 @@ import { InvestorPreferencesForm, type InvestorPreferences } from "@/components/
 import { StartupCard, type StartupCardData } from "@/components/startup-card";
 import { loadReadyStartups, requireInvestor } from "@/lib/investor";
 import { formatNad, INSTRUMENTS, isInstrument } from "@/lib/investors";
-import { SHOWCASE_ID_PREFIX, SHOWCASE_STARTUPS } from "@/lib/showcase";
+import { DEMO_STARTUP_IMAGES, SHOWCASE_ID_PREFIX, SHOWCASE_STARTUPS } from "@/lib/showcase";
 
 export default async function InvestorDashboardPage({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
   const { all } = await searchParams;
@@ -37,6 +37,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
     sector: s.sector,
     speciality: s.target_market ? `Serves ${s.target_market}` : undefined,
     readinessScore: Number(s.readiness_score ?? 0),
+    imageUrl: DEMO_STARTUP_IMAGES[s.id],
     kind: "platform",
     entrepreneurId: s.id,
     interested: interestedIn.has(s.id),
@@ -141,15 +142,13 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
 
           {samples.length > 0 && (
             <section>
-              <h2 className="mb-1 text-xl font-bold text-slate-800">Featured Namibian businesses</h2>
-              <p className="mb-3 text-sm text-gray-500">
-                {samples.length} sample {samples.length === 1 ? "profile" : "profiles"} for this demo, showing the kinds of businesses
-                MulaStream supports. Photos are illustrative, not of the businesses themselves.
-              </p>
-              <p className="mb-5 flex items-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                These businesses are not MulaStream users. They have not been assessed or verified by MulaStream, highlights are as
-                publicly reported, and no Investor Trust Pack exists for them.
+              <h2 className="mb-3 text-xl font-bold text-slate-800">Featured Namibian businesses</h2>
+              <p className="mb-5 flex items-start gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm leading-relaxed text-gray-600">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                <span>
+                  <b className="text-slate-800">Disclaimer:</b> These are illustrative examples, not verified MulaStream users.
+                  Highlights are as publicly reported, and photos show the sector, not the businesses themselves.
+                </span>
               </p>
               <div className="grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
                 {samples.map((card) => (

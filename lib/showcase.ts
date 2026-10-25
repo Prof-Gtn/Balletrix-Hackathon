@@ -63,7 +63,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Textiles and weaving",
     highlights: ["Turnaround success story", "DBN funded"],
     about: "A Swakopmund weaving workshop producing handwoven textiles, described as a turnaround success with development finance support.",
-    imageUrl: "https://images.unsplash.com/photo-1600166898405-da9535204843?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: woven carpet
+    imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: rack of knitwear
   },
   {
     slug: "lunde-trading",
@@ -74,7 +74,7 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
     speciality: "Garment manufacturing (school uniforms)",
     highlights: ["Sanlam Bridge winner", "Expanding production"],
     about: "A Walvis Bay garment manufacturer focused on school uniforms, serving steady institutional demand and growing its capacity.",
-    imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: rack of garments
+    imageUrl: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // illustrative: plain sweatshirt
   },
   {
     slug: "kokeni-ppi-chilli",
@@ -100,6 +100,18 @@ export const SHOWCASE_STARTUPS: ShowcaseStartup[] = [
 ];
 
 export const SHOWCASE_ID_PREFIX = "sample-";
+
+// Photos for the three fictional demo startups seeded by supabase/seed/demo_investment_ready_startups.sql.
+// They are real database profiles (shown as verified startups), but the database has no image column,
+// so their pictures are matched here by profile id. Any other startup gets the gradient tile.
+export const DEMO_STARTUP_IMAGES: Record<string, string> = {
+  // Desert Rose Jewellery: gold jewellery flat-lay
+  "d3a0c0de-0000-4000-8000-000000000001": "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+  // Kalahari Loom Textiles: woven carpet
+  "d3a0c0de-0000-4000-8000-000000000002": "https://images.unsplash.com/photo-1600166898405-da9535204843?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+  // Coastline Uniforms CC: craftsman at a workshop machine
+  "d3a0c0de-0000-4000-8000-000000000003": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+};
 
 export function findShowcaseStartup(id: string): ShowcaseStartup | undefined {
   if (!id.startsWith(SHOWCASE_ID_PREFIX)) return undefined;
