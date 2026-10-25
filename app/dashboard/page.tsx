@@ -218,7 +218,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link
                   href="/mentor"
-                  className="inline-flex shrink-0 items-center gap-2 rounded bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+                  className="inline-flex shrink-0 items-center gap-2 rounded bg-orange-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-orange-600"
                 >
                   <MessageCircle className="h-4 w-4" /> Message Investor
                 </Link>

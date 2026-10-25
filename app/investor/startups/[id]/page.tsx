@@ -2,18 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BadgeCheck, FileLock2, Info, MapPin, Target, TrendingUp, Users } from "lucide-react";
 import { DueDiligencePackage } from "@/components/due-diligence-package";
-import { InvestorHeader } from "@/components/investor-header";
 import { loadReadyStartups, requireInvestor } from "@/lib/investor";
 import { findShowcaseStartup, sectorOutlook } from "@/lib/showcase";
 
 export default async function StartupProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, user } = await requireInvestor();
+  const { supabase } = await requireInvestor();
 
   const sample = findShowcaseStartup(id);
   if (sample) {
     return (
-      <Layout email={user.email ?? ""}>
+      <Layout>
         <ProfileHeader
           name={sample.businessName}
           subtitle={`${sample.sector} · ${sample.speciality}`}
@@ -63,7 +62,7 @@ export default async function StartupProfilePage({ params }: { params: Promise<{
   if (!startup) notFound();
 
   return (
-    <Layout email={user.email ?? ""}>
+    <Layout>
       <ProfileHeader
         name={startup.business_name || "Unnamed business"}
         subtitle={`${startup.sector || "Sector not set"} · Month ${startup.current_month ?? 3} of 3`}
@@ -96,16 +95,15 @@ export default async function StartupProfilePage({ params }: { params: Promise<{
   );
 }
 
-function Layout({ email, children }: { email: string; children: React.ReactNode }) {
+function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <InvestorHeader email={email} />
-      <main className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">
+    <div className="bg-gray-50">
+      <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">
         <Link href="/investor/dashboard" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-slate-800">
           <ArrowLeft className="h-4 w-4" /> Back to startups
         </Link>
         {children}
-      </main>
+      </div>
     </div>
   );
 }

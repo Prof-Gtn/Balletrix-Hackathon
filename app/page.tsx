@@ -5,8 +5,8 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { loadPreferredLanguage } from "@/lib/preferred-language";
 import { createClient } from "@/lib/supabase/server";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80";
+// Sunlit acacia savanna at golden hour (Unsplash). Swap for a photo of a real Namibian business when you have one.
+const HERO_IMAGE = "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80";
 
 const FEATURES = [
   { icon: Bot, title: "AI-Powered Mentorship", text: "Get personalised advice from our AI business mentor." },
@@ -33,7 +33,7 @@ export default async function LandingPage() {
         <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
           <LanguageSelector initial={language} tone="dark" />
           {user ? (
-            <Link href="/dashboard" className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+            <Link href="/dashboard" className="rounded-full bg-orange-500 px-5 py-2 text-sm font-medium text-white transition hover:bg-orange-600">
               Go to Dashboard
             </Link>
           ) : (
@@ -41,7 +41,7 @@ export default async function LandingPage() {
               <Link href="/login" className="text-sm font-medium text-white hover:text-orange-400">
                 Login
               </Link>
-              <Link href="/signup" className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+              <Link href="/signup" className="rounded-full bg-orange-500 px-5 py-2 text-sm font-medium text-white transition hover:bg-orange-600">
                 Sign Up
               </Link>
             </>
@@ -53,8 +53,8 @@ export default async function LandingPage() {
       <section id="home" className="relative flex min-h-[600px] items-center overflow-hidden bg-navy-2 text-white">
         <div className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover object-center opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-r from-navy-2 via-navy-2/90 to-transparent" />
+          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover object-[center_60%] opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-2 via-navy-2/75 to-navy-2/10" />
         </div>
         <div className="relative z-10 px-5 py-20 md:w-3/5 md:px-8 md:py-32">
           <h1 className="mb-6 text-4xl leading-tight font-bold md:text-6xl">
@@ -69,7 +69,7 @@ export default async function LandingPage() {
           <div className="flex flex-wrap gap-4">
             <Link
               href={user ? "/dashboard" : "/signup"}
-              className="rounded-md bg-emerald-500 px-8 py-3 font-medium text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-600"
+              className="rounded-md bg-orange-500 px-8 py-3 font-medium text-white shadow-lg shadow-orange-500/30 transition hover:bg-orange-600"
             >
               Get Started
             </Link>

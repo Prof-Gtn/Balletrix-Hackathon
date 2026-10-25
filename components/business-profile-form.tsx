@@ -124,7 +124,7 @@ export function BusinessProfileForm({
       <button
         type="submit"
         disabled={isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 font-medium text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:px-8"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:px-8"
       >
         {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
         {submitLabel}

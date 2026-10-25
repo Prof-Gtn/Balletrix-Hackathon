@@ -14,6 +14,7 @@ import { RerunAssessment } from "@/components/rerun-assessment";
 import { ASSESSMENT_EVIDENCE_TYPE } from "@/lib/evidence";
 import { GATE_REQUIREMENTS, toIncubationMonth } from "@/lib/gates";
 import { formatNad, INSTRUMENTS, isInstrument, MOCK_ENTREPRENEUR_SECTOR } from "@/lib/investors";
+import { HOME, toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 import { initials } from "@/lib/utils";
 
@@ -46,6 +47,9 @@ export default async function AssessmentPage() {
       .not("file_url", "is", null)
       .order("created_at", { ascending: false }),
   ]);
+
+  const role = toRole(profile?.role);
+  if (role !== "entrepreneur") redirect(HOME[role]);
 
   const currentMonth = toIncubationMonth(profile?.current_month ?? 1);
   const readinessScore: number = profile?.readiness_score ?? 0;

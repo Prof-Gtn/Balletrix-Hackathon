@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { HOME, toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
 export type ReadyStartup = {
@@ -13,7 +14,7 @@ export type ReadyStartup = {
   current_month: number | null;
 };
 
-// Investor pages are only for profiles with role = 'investor'; everyone else goes to their dashboard.
+// Investor pages are only for profiles with role = 'investor'; everyone else goes to their own dashboard.
 export async function requireInvestor() {
   const supabase = await createClient();
   const {
@@ -22,7 +23,8 @@ export async function requireInvestor() {
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profile?.role !== "investor") redirect("/dashboard");
+  const role = toRole(profile?.role);
+  if (role !== "investor") redirect(HOME[role]);
 
   return { supabase, user };
 }

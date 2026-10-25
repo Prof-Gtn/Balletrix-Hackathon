@@ -5,25 +5,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChartLine, Layers, Loader2, UserRound } from "lucide-react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { HOME, toRole, type Role } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Mode = "login" | "signup";
-type Role = "entrepreneur" | "investor";
+// Roles people can choose at sign-up. Admins are set in Supabase.
+type SignupRole = Exclude<Role, "admin">;
 
-const ROLES: { value: Role; label: string; icon: typeof UserRound }[] = [
+const ROLES: { value: SignupRole; label: string; icon: typeof UserRound }[] = [
   { value: "entrepreneur", label: "Entrepreneur", icon: UserRound },
   { value: "investor", label: "Investor", icon: ChartLine },
 ];
 
-// Where each role lands after signing in. New entrepreneurs go through onboarding first.
-const HOME: Record<Role, string> = { entrepreneur: "/dashboard", investor: "/investor/dashboard" };
-const AFTER_SIGNUP: Record<Role, string> = { entrepreneur: "/onboarding", investor: "/investor/dashboard" };
+// New entrepreneurs go through onboarding first; after that, each role lands on HOME[role].
+const AFTER_SIGNUP: Record<SignupRole, string> = { entrepreneur: "/onboarding", investor: "/investor/dashboard" };
 
 // Creates the user's profiles row if it doesn't exist yet. Needs a logged-in session to pass RLS,
 // so it runs right after sign-up when a session is returned, and again on login to cover users
 // who had to confirm their email first.
-async function ensureProfile(supabase: SupabaseClient, user: User, role: Role) {
+async function ensureProfile(supabase: SupabaseClient, user: User, role: SignupRole) {
   const { error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, email: user.email, role }, { onConflict: "id", ignoreDuplicates: true });
@@ -31,7 +32,7 @@ async function ensureProfile(supabase: SupabaseClient, user: User, role: Role) {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500";
+  "w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500";
 
 function Field({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
   return (
@@ -52,7 +53,7 @@ export function LoginForm({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<Role>("entrepreneur");
+  const [role, setRole] = useState<SignupRole>("entrepreneur");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,13 +101,13 @@ export function LoginForm({ mode }: { mode: Mode }) {
       if (error) {
         setError(error.message);
       } else {
-        const metadataRole: Role = data.user.user_metadata?.role === "investor" ? "investor" : "entrepreneur";
+        const metadataRole: SignupRole = data.user.user_metadata?.role === "investor" ? "investor" : "entrepreneur";
         const profileError = await ensureProfile(supabase, data.user, metadataRole);
         if (profileError) {
           setError(`Signed in, but the profile could not be saved: ${profileError.message}`);
         } else {
           const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-          const savedRole: Role = profile?.role === "investor" ? "investor" : metadataRole;
+          const savedRole: Role = profile ? toRole(profile.role) : metadataRole;
           return go(HOME[savedRole], "Signed in. Opening your dashboard…");
         }
       }
@@ -125,8 +126,8 @@ export function LoginForm({ mode }: { mode: Mode }) {
   return (
     <div className="flex w-full flex-col justify-center p-8 sm:p-10 md:w-1/2 md:p-12">
       <Link href="/" className={cn("flex items-center gap-2", isSignup ? "mb-8" : "mb-10")}>
-        <Layers className="h-6 w-6 text-emerald-500" strokeWidth={2.5} />
-        <span className="text-xl font-bold text-slate-800">MulaStream AI</span>
+        <Layers className="h-6 w-6 text-navy" strokeWidth={2.5} />
+        <span className="text-xl font-bold text-navy">MulaStream AI</span>
       </Link>
       <h2 className="mb-2 text-2xl font-bold">{isSignup ? "Create Your Account" : "Welcome Back"}</h2>
       <p className={cn("text-sm text-gray-500", isSignup ? "mb-6" : "mb-8")}>
@@ -196,7 +197,7 @@ export function LoginForm({ mode }: { mode: Mode }) {
                       key={value}
                       className={cn(
                         "cursor-pointer rounded-lg border p-3 text-center transition",
-                        selected ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
+                        selected ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:bg-gray-50"
                       )}
                     >
                       <input
@@ -207,8 +208,8 @@ export function LoginForm({ mode }: { mode: Mode }) {
                         onChange={() => setRole(value)}
                         className="sr-only"
                       />
-                      <Icon className={cn("mx-auto mb-1 h-4 w-4", selected ? "text-emerald-600" : "text-gray-400")} />
-                      <span className={cn("text-xs font-medium", selected ? "text-emerald-700" : "text-gray-600")}>{label}</span>
+                      <Icon className={cn("mx-auto mb-1 h-4 w-4", selected ? "text-orange-600" : "text-gray-400")} />
+                      <span className={cn("text-xs font-medium", selected ? "text-orange-700" : "text-gray-600")}>{label}</span>
                     </label>
                   );
                 })}
@@ -221,8 +222,8 @@ export function LoginForm({ mode }: { mode: Mode }) {
           type="submit"
           disabled={loading}
           className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-lg py-3 font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-70",
-            isSignup ? "mt-4 bg-emerald-500 hover:bg-emerald-600" : "bg-slate-900 hover:bg-slate-800"
+            "flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70",
+            isSignup && "mt-4"
           )}
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}

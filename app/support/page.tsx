@@ -1,6 +1,6 @@
 import { ChevronDown, LifeBuoy, Mail, MessageCircleQuestion } from "lucide-react";
 import { MentorChat } from "@/components/mentor-chat";
-import { loadEntrepreneur } from "@/lib/entrepreneur";
+import { loadMember } from "@/lib/entrepreneur";
 
 const SUPPORT_EMAIL = "support@mulastream.com";
 
@@ -80,7 +80,7 @@ const FAQS: { question: string; answer: React.ReactNode }[] = [
 ];
 
 export default async function SupportPage() {
-  const { firstName } = await loadEntrepreneur();
+  const { firstName, role } = await loadMember();
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-4 md:p-8">
@@ -100,9 +100,13 @@ export default async function SupportPage() {
       {/* AI assistant */}
       <section aria-labelledby="assistant-heading">
         <h2 id="assistant-heading" className="mb-1 flex items-center gap-2 text-xl font-bold text-slate-800">
-          <MessageCircleQuestion className="h-5 w-5 text-emerald-500" /> Ask the AI Assistant
+          <MessageCircleQuestion className="h-5 w-5 text-orange-500" /> Ask the AI Assistant
         </h2>
-        <p className="mb-4 text-sm text-gray-500">It knows your business details and score, so its answers are about you.</p>
+        <p className="mb-4 text-sm text-gray-500">
+          {role === "entrepreneur"
+            ? "It knows your business details and score, so its answers are about you."
+            : "Ask anything about how MulaStream works."}
+        </p>
         <MentorChat
           mode="member"
           variant="embedded"
@@ -139,7 +143,7 @@ export default async function SupportPage() {
         </div>
         <a
           href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("MulaStream support request")}`}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-600"
+          className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-orange-600"
         >
           <Mail className="h-4 w-4" /> Email {SUPPORT_EMAIL}
         </a>

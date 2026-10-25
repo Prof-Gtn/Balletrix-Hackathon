@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Filter, Info, Rocket, ShieldCheck, Sparkles } from "lucide-react";
-import { InvestorHeader } from "@/components/investor-header";
 import { InvestorPreferencesForm, type InvestorPreferences } from "@/components/investor-preferences-form";
 import { StartupCard, type StartupCardData } from "@/components/startup-card";
 import { loadReadyStartups, requireInvestor } from "@/lib/investor";
@@ -67,8 +66,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <InvestorHeader email={user.email ?? ""} />
+    <div className="bg-gray-50">
 
       {/* Hero */}
       <section className="investment-bg px-4 py-10 text-white md:px-8 md:py-14">
@@ -89,7 +87,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
         </div>
       </section>
 
-      <main className="mx-auto grid max-w-7xl gap-8 p-4 md:p-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="mx-auto grid max-w-7xl gap-8 p-4 md:p-8 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-10">
           {filterSector && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm">
@@ -170,7 +168,7 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
             )}
           </section>
         </aside>
-      </main>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Bell, ChevronDown, LifeBuoy, Loader2, LogOut, Menu, Settings } from "lu
 import { Brand } from "@/components/brand";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import type { Language } from "@/lib/languages";
+import type { Role } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/client";
 import { cn, initials } from "@/lib/utils";
 
@@ -35,11 +36,13 @@ const menuItemClass = "flex w-full items-center gap-3 px-4 py-2.5 text-left text
 export function Header({
   name,
   email,
+  role,
   language,
   onMenu,
 }: {
   name: string;
   email: string;
+  role: Role;
   language: Language;
   onMenu: () => void;
 }) {
@@ -49,6 +52,8 @@ export function Header({
   const [showNotifications, setShowNotifications] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  // Entrepreneurs' settings are their business profile; investors and admins get the account page.
+  const settingsHref = role === "entrepreneur" ? "/profile" : "/settings";
   const bellRef = useRef<HTMLDivElement>(null);
 
   useDismiss(menuRef, isOpen, () => setIsOpen(false));
@@ -87,7 +92,7 @@ export function Header({
             <Bell className="h-5 w-5" />
           </button>
           {showNotifications && (
-            <div className="absolute right-0 mt-3 w-64 rounded-xl border border-gray-100 bg-white p-4 text-sm text-gray-500 shadow-lg">
+            <div className="absolute right-0 z-50 mt-3 w-64 rounded-xl border border-gray-100 bg-white p-4 text-sm text-gray-500 shadow-lg">
               You&apos;re all caught up. We&apos;ll let you know when your documents are checked.
             </div>
           )}
@@ -110,14 +115,14 @@ export function Header({
             <div
               role="menu"
               aria-label="Account"
-              className="absolute right-0 mt-2 w-60 overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-lg"
+              className="absolute right-0 z-50 mt-2 w-60 origin-top-right overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-lg ring-1 ring-black/5"
             >
               <div className="border-b border-gray-100 px-4 py-3">
                 <p className="truncate text-sm font-semibold text-slate-800">{name}</p>
                 <p className="truncate text-xs text-gray-500">{email}</p>
               </div>
               <div className="py-1">
-                <Link href="/profile" role="menuitem" onClick={() => setIsOpen(false)} className={cn(menuItemClass, "text-slate-700")}>
+                <Link href={settingsHref} role="menuitem" onClick={() => setIsOpen(false)} className={cn(menuItemClass, "text-slate-700")}>
                   <Settings className="h-4 w-4 text-gray-400" /> Settings
                 </Link>
                 <Link href="/support" role="menuitem" onClick={() => setIsOpen(false)} className={cn(menuItemClass, "text-slate-700")}>

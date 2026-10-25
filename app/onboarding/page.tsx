@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Layers } from "lucide-react";
 import { AuthPanel } from "@/components/auth-panel";
 import { BusinessProfileForm } from "@/components/business-profile-form";
+import { HOME, toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
@@ -14,6 +15,9 @@ export default async function OnboardingPage() {
 
   // "*" so this still loads before the business profile migration has run.
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  // Business onboarding is for entrepreneurs; investors and admins go to their own dashboards.
+  const role = toRole(profile?.role);
+  if (profile && role !== "entrepreneur") redirect(HOME[role]);
   const firstName = (user.user_metadata?.full_name || "").split(/\s+/)[0];
 
   return (

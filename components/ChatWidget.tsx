@@ -50,7 +50,7 @@ export function ChatWidget({ mode, firstName = "" }: { mode: ChatMode; firstName
         aria-label={open ? `Close ${label} chat` : `Chat with the ${label}`}
         aria-expanded={open}
         className={cn(
-          "fixed right-4 bottom-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition hover:scale-105 hover:bg-emerald-600 sm:right-6 sm:bottom-6",
+          "fixed right-4 bottom-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/30 transition hover:scale-105 hover:bg-orange-600 sm:right-6 sm:bottom-6",
           open && "max-sm:hidden"
         )}
       >

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { isLanguage } from "@/lib/languages";
 import { loadPreferredLanguage } from "@/lib/preferred-language";
+import { toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -35,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           name={name}
           email={user?.email ?? ""}
           isLoggedIn={Boolean(user)}
-          isAdmin={profile?.role === "admin"}
+          role={toRole(profile?.role)}
           language={language}
         >
           {children}

@@ -94,13 +94,13 @@ export function MentorChat({
         variant === "widget" && "h-full"
       )}
     >
-      <div className="flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-500">
+      <div className="flex items-center gap-3 bg-[#1a202c] px-4 py-3 text-white">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500">
           <Bot className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{title ?? config.title}</p>
-          <p className="flex items-center gap-1.5 text-xs text-emerald-100">
+          <p className="flex items-center gap-1.5 text-xs text-slate-300">
             {isPending ? (
               <>
                 <Loader2 className="h-3 w-3 animate-spin" /> typing…
@@ -114,7 +114,7 @@ export function MentorChat({
           </p>
         </div>
         {onClose && (
-          <button type="button" onClick={onClose} aria-label="Close chat" className="rounded-full p-1.5 text-emerald-100 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={onClose} aria-label="Close chat" className="rounded-full p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         )}
@@ -127,7 +127,7 @@ export function MentorChat({
               className={cn(
                 "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-800 shadow-sm",
                 variant !== "widget" && "sm:max-w-[70%]",
-                m.role === "user" ? "rounded-tr-none bg-[#d9fdd3]" : "rounded-tl-none bg-white"
+                m.role === "user" ? "rounded-tr-none bg-orange-100" : "rounded-tl-none bg-white"
               )}
             >
               {m.role === "assistant" ? (
@@ -162,7 +162,7 @@ export function MentorChat({
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                className="rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-50"
               >
                 {s}
               </button>
@@ -197,13 +197,13 @@ export function MentorChat({
             }
           }}
           placeholder="Type a message"
-          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-3xl border-0 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-3xl border-0 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-500"
         />
         <button
           type="submit"
           disabled={isPending || !draft.trim()}
           aria-label="Send"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-500 text-white transition hover:bg-emerald-600 disabled:opacity-50"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-orange-500 text-white transition hover:bg-orange-600 disabled:opacity-50"
         >
           {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
         </button>
@@ -217,7 +217,7 @@ export function MentorChat({
               type="button"
               onClick={() => send(reply)}
               disabled={isPending}
-              className="rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50"
+              className="rounded-full border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-semibold text-orange-800 transition hover:bg-orange-100 disabled:opacity-50"
             >
               {reply}
             </button>

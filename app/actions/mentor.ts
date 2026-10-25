@@ -2,6 +2,8 @@
 
 import { headers } from "next/headers";
 import { askGuestAssistant, askMentor, type MentorMessage } from "@/lib/mentor";
+import { loadPreferredLanguage } from "@/lib/preferred-language";
+import { toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_MESSAGE_CHARS = 2_000;
@@ -58,7 +60,9 @@ export async function sendGuestMessage(history: MentorMessage[]): Promise<Mentor
   }
 
   try {
-    return { ok: true, reply: await askGuestAssistant(history) };
+    // Visitors choose a language on the landing page; it's kept in a cookie.
+    const language = await loadPreferredLanguage(await createClient(), null);
+    return { ok: true, reply: await askGuestAssistant(history, language) };
   } catch (error) {
     console.error("askGuestAssistant failed", error);
     return { ok: false, error: "The assistant couldn't reply just now. Please try again in a moment." };
@@ -78,17 +82,25 @@ export async function sendMentorMessage(history: MentorMessage[]): Promise<Mento
   if (authError || !user) return { ok: false, error: "Please log in to chat with your mentor." };
 
   // "*" so the mentor still works before the business profile migration has run.
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  const [{ data: profile }, language] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    loadPreferredLanguage(supabase, user.id),
+  ]);
 
   try {
-    const reply = await askMentor(history, {
-      name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Founder",
-      businessName: profile?.business_name || null,
-      sector: profile?.sector || null,
-      description: profile?.business_description || null,
-      readinessScore: profile?.readiness_score ?? 0,
-      currentMonth: profile?.current_month ?? 1,
-    });
+    const reply = await askMentor(
+      history,
+      {
+        role: toRole(profile?.role),
+        name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Founder",
+        businessName: profile?.business_name || null,
+        sector: profile?.sector || null,
+        description: profile?.business_description || null,
+        readinessScore: profile?.readiness_score ?? 0,
+        currentMonth: profile?.current_month ?? 1,
+      },
+      language
+    );
     return { ok: true, reply };
   } catch (error) {
     console.error("askMentor failed", error);
