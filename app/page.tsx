@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Bot, ClipboardCheck, Sprout } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { loadPreferredLanguage } from "@/lib/preferred-language";
 import { createClient } from "@/lib/supabase/server";
 
 const HERO_IMAGE =
@@ -17,17 +19,19 @@ export default async function LandingPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const language = await loadPreferredLanguage(supabase, user?.id ?? null);
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="relative z-20 flex items-center justify-between gap-4 border-b border-gray-100 bg-navy px-5 py-5 text-white md:px-8">
+      <nav className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-navy px-5 py-5 text-white md:px-8">
         <Brand />
         <div className="hidden space-x-8 text-sm font-medium text-gray-300 md:flex">
           <a href="#home" className="hover:text-white">Home</a>
           <a href="#features" className="hover:text-white">Features</a>
           <a href="#about" className="hover:text-white">About</a>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
+          <LanguageSelector initial={language} tone="dark" />
           {user ? (
             <Link href="/dashboard" className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
               Go to Dashboard

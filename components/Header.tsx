@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, LifeBuoy, Loader2, LogOut, Menu, Settings } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import type { Language } from "@/lib/languages";
 import { createClient } from "@/lib/supabase/client";
 import { cn, initials } from "@/lib/utils";
 
@@ -29,8 +31,18 @@ function useDismiss(ref: React.RefObject<HTMLElement | null>, isOpen: boolean, c
 
 const menuItemClass = "flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-slate-50";
 
-// White top header from the template: notification bell and the avatar menu (Settings, Support, Logout).
-export function Header({ name, email, onMenu }: { name: string; email: string; onMenu: () => void }) {
+// White top header from the template: AI language, notification bell and the avatar menu (Settings, Support, Logout).
+export function Header({
+  name,
+  email,
+  language,
+  onMenu,
+}: {
+  name: string;
+  email: string;
+  language: Language;
+  onMenu: () => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +74,8 @@ export function Header({ name, email, onMenu }: { name: string; email: string; o
         <Brand className="text-base text-slate-800 md:hidden" />
       </div>
 
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-3 md:gap-6">
+        <LanguageSelector initial={language} />
         <div ref={bellRef} className="relative">
           <button
             type="button"

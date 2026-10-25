@@ -11,14 +11,17 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
   const { all } = await searchParams;
   const { supabase, user } = await requireInvestor();
 
-  const [{ data, error }, { startups, error: startupsError }] = await Promise.all([
+  const [{ data, error }, { startups, error: startupsError }, { data: interests }] = await Promise.all([
     supabase
       .from("investor_preferences")
       .select("preferred_sector, max_investment_amount, preferred_instrument")
       .eq("user_id", user.id)
       .maybeSingle(),
     loadReadyStartups(supabase),
+    supabase.from("investor_interests").select("entrepreneur_id").eq("investor_id", user.id),
   ]);
+  // Startups this investor already expressed interest in (empty until the matchmaking migration runs).
+  const interestedIn = new Set((interests ?? []).map((row) => row.entrepreneur_id as string));
 
   const preferences: InvestorPreferences | null =
     data && isInstrument(data.preferred_instrument)
@@ -36,6 +39,8 @@ export default async function InvestorDashboardPage({ searchParams }: { searchPa
     speciality: s.target_market ? `Serves ${s.target_market}` : undefined,
     readinessScore: Number(s.readiness_score ?? 0),
     kind: "platform",
+    entrepreneurId: s.id,
+    interested: interestedIn.has(s.id),
   }));
   const sampleCards: StartupCardData[] = SHOWCASE_STARTUPS.map((s) => ({
     href: `/investor/startups/${SHOWCASE_ID_PREFIX}${s.slug}`,

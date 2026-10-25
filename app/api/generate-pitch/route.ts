@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateInvestmentMemo, type MemoEvidence } from "@/lib/claude";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
+import { loadPreferredLanguage } from "@/lib/preferred-language";
 import { createClient } from "@/lib/supabase/server";
 
 // POST, not GET: each call runs the AI model, so it shouldn't be triggered by prefetching or crawlers.
@@ -15,13 +16,14 @@ export async function POST() {
     return NextResponse.json({ error: "You must be logged in to generate a package." }, { status: 401 });
   }
 
-  const [{ data: profile, error: profileError }, { data: rows, error: evidenceError }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: rows, error: evidenceError }, language] = await Promise.all([
     supabase.from("profiles").select("business_name, readiness_score, current_month").eq("id", user.id).maybeSingle(),
     supabase
       .from("evidence_submissions")
       .select("evidence_type, file_url, month, ai_verification_status, ai_feedback, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true }),
+    loadPreferredLanguage(supabase, user.id),
   ]);
   if (profileError || evidenceError) {
     const message = (profileError ?? evidenceError)?.message;
@@ -52,7 +54,8 @@ export async function POST() {
         readinessScore: profile?.readiness_score ?? 0,
         currentMonth: profile?.current_month ?? 1,
       },
-      evidence
+      evidence,
+      language
     );
     return NextResponse.json({ markdown });
   } catch (error) {

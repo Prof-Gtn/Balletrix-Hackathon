@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { generateInvestmentMemo, type MemoEvidence } from "@/lib/claude";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
+import { loadPreferredLanguage } from "@/lib/preferred-language";
 import { createClient } from "@/lib/supabase/server";
 
 type DueDiligenceData = {
@@ -32,7 +33,11 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
 
-  const { data, error } = await supabase.rpc("startup_due_diligence", { p_startup: startupId });
+  // The memo is written in the reading investor's language.
+  const [{ data, error }, language] = await Promise.all([
+    supabase.rpc("startup_due_diligence", { p_startup: startupId }),
+    loadPreferredLanguage(supabase, user.id),
+  ]);
   if (error) {
     console.error("startup_due_diligence failed", error);
     return NextResponse.json({ error: "We couldn't load this startup right now." }, { status: 500 });
@@ -61,7 +66,8 @@ export async function POST(request: NextRequest) {
         readinessScore: profile.readiness_score ?? 0,
         currentMonth: profile.current_month ?? 1,
       },
-      memoEvidence
+      memoEvidence,
+      language
     );
     return NextResponse.json({ markdown });
   } catch (err) {

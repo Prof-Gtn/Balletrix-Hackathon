@@ -14,6 +14,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { ExpressInterestButton } from "@/components/express-interest-button";
 import { sectorOutlook } from "@/lib/showcase";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,9 @@ export type StartupCardData = {
   imageUrl?: string;
   // "platform": a real MulaStream startup that passed all three gates. "sample": a demo profile.
   kind: "platform" | "sample";
+  // Platform startups only: the entrepreneur's profile id, for "Express Interest".
+  entrepreneurId?: string;
+  interested?: boolean;
 };
 
 const SECTOR_ICONS: Record<string, LucideIcon> = {
@@ -153,12 +157,17 @@ export function StartupCard({ startup }: { startup: StartupCardData }) {
           </div>
         )}
 
-        <Link
-          href={startup.href}
-          className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+        <div className="mt-5 grid gap-2">
+          {startup.entrepreneurId && (
+            <ExpressInterestButton entrepreneurId={startup.entrepreneurId} interested={Boolean(startup.interested)} />
+          )}
+          <Link
+            href={startup.href}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
         >
-          View Full Profile &amp; DD <ArrowRight className="h-4 w-4" />
-        </Link>
+            View Full Profile &amp; DD <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </article>
   );

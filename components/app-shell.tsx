@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChatWidget } from "@/components/ChatWidget";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
+import type { Language } from "@/lib/languages";
 
 // Pages that render without the sidebar and header: marketing, auth, onboarding, and the investor area
 // (which has its own layout).
@@ -23,11 +24,15 @@ export function AppShell({
   name,
   email,
   isLoggedIn,
+  isAdmin,
+  language,
   children,
 }: {
   name: string;
   email: string;
   isLoggedIn: boolean;
+  isAdmin: boolean;
+  language: Language;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -47,9 +52,9 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} isAdmin={isAdmin} />
       <div className="min-w-0 flex-1">
-        <Header name={name} email={email} onMenu={() => setMenuOpen(true)} />
+        <Header name={name} email={email} language={language} onMenu={() => setMenuOpen(true)} />
         <main className="pb-24">{children}</main>
       </div>
       {/* /mentor and /support already have the full chat, so the floating widget would duplicate it. */}

@@ -11,6 +11,7 @@ import {
 } from "@/lib/claude";
 import { DocumentReadError, extractDocumentText } from "@/lib/documents";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
+import { loadPreferredLanguage } from "@/lib/preferred-language";
 import type { RedTeamReport } from "@/lib/red-team";
 import { createClient } from "@/lib/supabase/server";
 
@@ -124,6 +125,9 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
     month: row.month,
   }));
 
+  // The AI writes the assessment and Tough Love card in the user's chosen language.
+  const language = await loadPreferredLanguage(supabase, user.id);
+
   const hasVerifiedThisMonth = evidence.some((e) => e.month === currentMonth && e.status === "verified");
   const bonus = hasVerifiedThisMonth ? VERIFIED_EVIDENCE_BONUS : NO_BONUS;
 
@@ -132,8 +136,8 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   let redTeam: RedTeamReport | null;
   try {
     [result, redTeam] = await Promise.all([
-      assessBusiness(description, currentMonth, { bonus, evidence }),
-      runDevilsAdvocate(description).catch((error) => {
+      assessBusiness(description, currentMonth, { bonus, evidence, language }),
+      runDevilsAdvocate(description, language).catch((error) => {
         console.error("runDevilsAdvocate failed", error);
         return null;
       }),

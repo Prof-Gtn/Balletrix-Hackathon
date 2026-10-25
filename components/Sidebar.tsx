@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   Rocket,
+  ShieldCheck,
   ShieldHalf,
   Trophy,
   X,
@@ -30,10 +31,14 @@ export const NAV_ITEMS = [
   { href: "/support", label: "Help & Support", icon: LifeBuoy },
 ];
 
+// Only shown to profiles with role = 'admin'; the page itself also checks the role.
+const ADMIN_ITEM = { href: "/admin/dashboard", label: "Admin Panel", icon: ShieldCheck };
+
 // Dark navy sidebar from the template, with the orange-bordered active item. On small screens it is a
 // slide-in drawer opened from the header's menu button.
-export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Sidebar({ open, onClose, isAdmin = false }: { open: boolean; onClose: () => void; isAdmin?: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS;
 
   return (
     <>
@@ -56,7 +61,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             </button>
           </div>
           <nav aria-label="Main navigation" className="mt-4 space-y-1 px-4">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            {items.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
                 <Link

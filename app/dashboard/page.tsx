@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { Briefcase, Circle, CircleCheck, FileUp, Shield, Sparkles, Star } from "lucide-react";
+import { Briefcase, Circle, CircleCheck, FileUp, HeartHandshake, MessageCircle, Shield, Sparkles, Star } from "lucide-react";
 import { PageTitle } from "@/components/page-title";
 import { loadEntrepreneur } from "@/lib/entrepreneur";
 import { fileNameFromPath, EVIDENCE_TYPE_LABELS, toEvidenceType } from "@/lib/evidence";
 import { badges, nextMilestone, totalPoints } from "@/lib/gamification";
 import { GATE_REQUIREMENTS } from "@/lib/gates";
 import { PHASES } from "@/lib/incubation";
+import { createClient } from "@/lib/supabase/server";
 
 // Readiness score each month's gate asks for, for the "Current Phase" progress bar.
 const GATE_SCORE = { 1: 50, 2: 65, 3: 80 } as const;
 
 type RoadmapStep = { action: string; why: string };
+type InterestedInvestor = { id: string; investor_id: string; email: string | null; status: string; created_at: string };
 
 function topRoadmapSteps(value: unknown, count: number): RoadmapStep[] {
   if (!Array.isArray(value)) return [];
@@ -33,6 +35,12 @@ function relativeTime(value: string): string {
 
 export default async function DashboardPage() {
   const data = await loadEntrepreneur({ requireOnboarding: true });
+  // Investors who pressed "Express Interest". The function returns their email, which RLS on profiles
+  // would otherwise hide; it errors (and the card shows nothing) until the matchmaking migration runs.
+  const supabase = await createClient();
+  const { data: interestRows, error: interestError } = await supabase.rpc("get_interested_investors");
+  if (interestError) console.error("get_interested_investors failed", interestError);
+  const investors = (interestRows ?? []) as InterestedInvestor[];
   const { profile, currentMonth, readinessScore, progress } = data;
 
   const points = totalPoints(progress);
@@ -192,6 +200,38 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-500">Nothing yet. Your assessments and uploads will show up here.</p>
           )}
         </div>
+      </div>
+
+      {/* Interested investors (matchmaking) */}
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-bold">
+          <HeartHandshake className="h-5 w-5 text-orange-500" /> Interested Investors
+        </h2>
+        <p className="mb-4 text-sm text-gray-500">Investors who want to talk to you about funding your business.</p>
+        {investors.length ? (
+          <ul className="divide-y divide-gray-100">
+            {investors.map((investor) => (
+              <li key={investor.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-800">{investor.email || "Investor"}</p>
+                  <p className="text-xs text-gray-400">Interested {relativeTime(investor.created_at).toLowerCase()}</p>
+                </div>
+                <Link
+                  href="/mentor"
+                  className="inline-flex shrink-0 items-center gap-2 rounded bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+                >
+                  <MessageCircle className="h-4 w-4" /> Message Investor
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-lg border border-dashed border-gray-200 p-5 text-sm text-gray-500">
+            {currentMonth >= 3
+              ? "No investors yet. Your business is visible in the Investor Marketplace, so keep your evidence up to date."
+              : "Investors can find you once you reach Month 3. Keep passing your gates!"}
+          </p>
+        )}
       </div>
     </div>
   );
