@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Briefcase, Circle, CircleCheck, FileUp, HeartHandshake, MessageCircle, Shield, Sparkles, Star } from "lucide-react";
+import { Briefcase, FileUp, HeartHandshake, MessageCircle, Shield, Sparkles, Star } from "lucide-react";
+import { GLOSSARY, InfoTip } from "@/components/info-tip";
 import { PageTitle } from "@/components/page-title";
+import { WelcomeTour } from "@/components/welcome-tour";
 import { loadEntrepreneur } from "@/lib/entrepreneur";
 import { fileNameFromPath, EVIDENCE_TYPE_LABELS, toEvidenceType } from "@/lib/evidence";
 import { badges, nextMilestone, totalPoints } from "@/lib/gamification";
@@ -48,6 +50,9 @@ export default async function DashboardPage() {
   const phase = PHASES[currentMonth];
   const phaseProgress = Math.min(100, Math.round((readinessScore / GATE_SCORE[currentMonth]) * 100));
   const nextSteps = topRoadmapSteps(profile?.roadmap, 3);
+  const hasAssessment = data.assessments.length > 0 || readinessScore > 0;
+  // Brand-new founders get the welcome tour.
+  const isNewFounder = currentMonth === 1 && readinessScore === 0;
 
   // Recent activity from the user's own assessments and uploads, newest first.
   const activity = [...data.assessments, ...data.uploads]
@@ -87,11 +92,70 @@ export default async function DashboardPage() {
         </p>
       )}
 
+      {isNewFounder && <WelcomeTour firstName={data.firstName} userId={data.userId} />}
+
+      {/* Next steps: the most important thing on the page. The top of the saved AI action plan. */}
+      <section className="rounded-2xl border border-gray-100 border-l-4 border-l-orange-500 bg-white p-8 shadow-sm">
+        <h2 className="text-xl font-bold text-slate-800">Next Steps</h2>
+        {nextSteps.length ? (
+          <>
+            <p className="mt-1 text-sm text-gray-500">From your AI action plan. Start with number 1.</p>
+            <ol className="mt-6 space-y-3">
+              {nextSteps.map((step, i) => (
+                <li key={i} className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-4">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span
+                      className={
+                        i === 0
+                          ? "grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-500 text-sm font-bold text-white"
+                          : "grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-gray-200 text-sm font-bold text-gray-500"
+                      }
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800">{step.action}</p>
+                      {step.why && <p className="mt-0.5 line-clamp-1 text-sm text-gray-500">{step.why}</p>}
+                    </div>
+                  </div>
+                  <Link
+                    href="/assessment"
+                    className={
+                      i === 0
+                        ? "shrink-0 rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+                        : "shrink-0 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    }
+                  >
+                    Start
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : (
+          <div className="mt-2">
+            <p className="max-w-2xl leading-relaxed text-gray-600">
+              {hasAssessment
+                ? "Run your assessment again to get a fresh action plan."
+                : `Start here. The AI will score your business and tell you exactly what to do next. To pass Month ${currentMonth} you need ${GATE_REQUIREMENTS[currentMonth].sentence}.`}
+            </p>
+            <Link
+              href="/assessment"
+              className="mt-6 inline-flex min-h-[56px] items-center gap-2 rounded-xl bg-orange-500 px-8 text-base font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
+            >
+              <Sparkles className="h-5 w-5" /> {hasAssessment ? "Go to Assessment" : "Run Your First AI Assessment"}
+            </Link>
+          </div>
+        )}
+      </section>
+
       {/* Top stats cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <div className="flex items-center justify-between h-full rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <div>
-            <p className="mb-2 text-sm font-medium text-gray-500">Overall Readiness Score</p>
+            <p className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-500">
+              Overall Readiness Score <InfoTip text={GLOSSARY.readinessScore} label="Readiness Score" />
+            </p>
             <div className="flex items-center gap-3">
               <ScoreRing score={readinessScore} />
               <div className="text-xs font-medium text-orange-600">
@@ -110,8 +174,9 @@ export default async function DashboardPage() {
           <div className="mt-3 h-1.5 w-full rounded-full bg-gray-200">
             <div className="h-1.5 rounded-full bg-blue-500" style={{ width: `${phaseProgress}%` }} />
           </div>
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
             {readinessScore} of {GATE_SCORE[currentMonth]} points needed for the gate
+            <InfoTip text={GLOSSARY.gate} label="Gate" />
           </p>
         </div>
 
@@ -134,53 +199,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Next steps: the top of the saved AI action plan */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-2">
-          <h2 className="mb-4 text-lg font-bold">Next Steps</h2>
-          {nextSteps.length ? (
-            <div className="space-y-4">
-              {nextSteps.map((step, i) => (
-                <div key={i} className="flex items-center justify-between gap-4 rounded-lg border border-gray-100 p-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    {i === 0 ? (
-                      <CircleCheck className="h-5 w-5 shrink-0 text-orange-500" />
-                    ) : (
-                      <Circle className="h-5 w-5 shrink-0 text-gray-300" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{step.action}</p>
-                      {step.why && <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">{step.why}</p>}
-                    </div>
-                  </div>
-                  <Link
-                    href="/assessment#step-2"
-                    className={
-                      i === 0
-                        ? "shrink-0 rounded bg-orange-500 px-4 py-1.5 text-xs text-white hover:bg-orange-600"
-                        : "shrink-0 rounded border border-blue-500 px-4 py-1.5 text-xs text-blue-500 hover:bg-blue-50"
-                    }
-                  >
-                    Start
-                  </Link>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-gray-200 p-5">
-              <p className="text-sm text-gray-500">
-                Your next steps appear here after your first AI assessment. To pass Month {currentMonth} you need{" "}
-                {GATE_REQUIREMENTS[currentMonth].sentence}.
-              </p>
-              <Link href="/assessment" className="inline-flex items-center gap-2 rounded bg-orange-500 px-4 py-2 text-xs text-white hover:bg-orange-600">
-                <Sparkles className="h-4 w-4" /> Run my assessment
-              </Link>
-            </div>
-          )}
-        </div>
-
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent activity */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-1">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold">Recent Activity</h2>
           {activity.length ? (
             <div className="relative space-y-4 before:absolute before:inset-0 before:ml-[13px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
@@ -200,38 +221,38 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-500">Nothing yet. Your assessments and uploads will show up here.</p>
           )}
         </div>
-      </div>
 
-      {/* Interested investors (matchmaking) */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-1 flex items-center gap-2 text-lg font-bold">
-          <HeartHandshake className="h-5 w-5 text-orange-500" /> Interested Investors
-        </h2>
-        <p className="mb-4 text-sm text-gray-500">Investors who want to talk to you about funding your business.</p>
-        {investors.length ? (
-          <ul className="divide-y divide-gray-100">
-            {investors.map((investor) => (
-              <li key={investor.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{investor.email || "Investor"}</p>
-                  <p className="text-xs text-gray-400">Interested {relativeTime(investor.created_at).toLowerCase()}</p>
-                </div>
-                <Link
-                  href="/mentor"
-                  className="inline-flex shrink-0 items-center gap-2 rounded bg-orange-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-orange-600"
-                >
-                  <MessageCircle className="h-4 w-4" /> Message Investor
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="rounded-lg border border-dashed border-gray-200 p-5 text-sm text-gray-500">
-            {currentMonth >= 3
-              ? "No investors yet. Your business is visible in the Investor Marketplace, so keep your evidence up to date."
-              : "Investors can find you once you reach Month 3. Keep passing your gates!"}
-          </p>
-        )}
+        {/* Interested investors (matchmaking) */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold">
+            <HeartHandshake className="h-5 w-5 text-orange-500" /> Interested Investors
+          </h2>
+          <p className="mb-4 text-sm text-gray-500">Investors who want to talk to you about funding your business.</p>
+          {investors.length ? (
+            <ul className="divide-y divide-gray-100">
+              {investors.map((investor) => (
+                <li key={investor.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800">{investor.email || "Investor"}</p>
+                    <p className="text-xs text-gray-400">Interested {relativeTime(investor.created_at).toLowerCase()}</p>
+                  </div>
+                  <Link
+                    href="/mentor"
+                    className="inline-flex shrink-0 items-center gap-2 rounded bg-orange-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-orange-600"
+                  >
+                    <MessageCircle className="h-4 w-4" /> Message Investor
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-lg border border-dashed border-gray-200 p-5 text-sm text-gray-500">
+              {currentMonth >= 3
+                ? "No investors yet. Your business is visible in the Investor Marketplace, so keep your evidence up to date."
+                : "Investors can find you once you reach Month 3. Keep passing your gates!"}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

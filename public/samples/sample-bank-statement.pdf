@@ -1,0 +1,53 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1497 >>
+stream
+BT /F1 11 Tf 50 780 Td 14 TL
+(*** SAMPLE ONLY - NOT A REAL BANK STATEMENT - NOT VALID AS EVIDENCE ***) Tj T*
+(This example shows what a business bank statement looks like.) Tj T*
+(Download your own statement as a PDF from your bank's internet banking.) Tj T*
+() Tj T*
+(EXAMPLE BANK NAMIBIA                     Business Current Account) Tj T*
+(Account holder: Example Trading CC       Account number: 0000 000 000) Tj T*
+(Statement period: 01 Sep 2026 - 30 Sep 2026) Tj T*
+() Tj T*
+(Date        Description                         Money in \(N$\)   Money out \(N$\)   Balance \(N$\)) Tj T*
+(01 Sep      Opening balance                                                         4,200.00) Tj T*
+(03 Sep      Customer payment - INV 001             3,500.00                         7,700.00) Tj T*
+(08 Sep      Supplier payment - stock                                1,800.00        5,900.00) Tj T*
+(15 Sep      Customer payment - INV 002             2,750.00                         8,650.00) Tj T*
+(22 Sep      Mobile money deposits                  1,940.00                        10,590.00) Tj T*
+(28 Sep      Rent                                                    2,000.00        8,590.00) Tj T*
+(30 Sep      Closing balance                                                         8,590.00) Tj T*
+() Tj T*
+(Total money in: N$ 8,190.00          Total money out: N$ 3,800.00) Tj T*
+() Tj T*
+(*** SAMPLE ONLY - created by MulaStream AI to show the format. Upload your own real statement. ***) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001790 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1860
+%%EOF

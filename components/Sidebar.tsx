@@ -18,27 +18,30 @@ import {
   X,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { GLOSSARY, InfoTip } from "@/components/info-tip";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; label: string; icon: typeof LayoutGrid };
+// `tip` explains a term first-time founders may not know, shown with a "?" beside the link.
+type NavItem = { href: string; label: string; icon: typeof LayoutGrid; tip?: { term: string; text: string } };
 
 const SUPPORT: NavItem = { href: "/support", label: "Help & Support", icon: LifeBuoy };
 const SETTINGS: NavItem = { href: "/settings", label: "Settings", icon: Settings };
 const MENTOR: NavItem = { href: "/mentor", label: "AI Mentor", icon: Bot };
 
 // Each role sees only its own pages. The pages also check the role, so hiding a link is never the only guard.
+// Entrepreneurs' links follow their journey: set up, get assessed, prove it, progress, then get funded.
 export const NAV_ITEMS: Record<Role, NavItem[]> = {
   entrepreneur: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
-    { href: "/profile", label: "Business Profile", icon: Briefcase },
-    MENTOR,
+    { href: "/profile", label: "My Business Profile", icon: Briefcase },
     { href: "/assessment", label: "Assessment", icon: ClipboardCheck },
+    { href: "/evidence", label: "Evidence Centre", icon: ShieldHalf, tip: { term: "Evidence Centre", text: GLOSSARY.evidence } },
     { href: "/incubation", label: "Incubation Programme", icon: Rocket },
-    { href: "/evidence", label: "Evidence Centre", icon: ShieldHalf },
+    { href: "/reports", label: "Reports", icon: BarChart3, tip: { term: "Due Diligence", text: GLOSSARY.dueDiligence } },
     { href: "/gamification", label: "Gamification", icon: Trophy },
-    { href: "/reports", label: "Reports", icon: BarChart3 },
+    MENTOR,
     SUPPORT,
   ],
   investor: [{ href: "/investor/dashboard", label: "Investor Portal", icon: TrendingUp }, MENTOR, SUPPORT, SETTINGS],
@@ -74,24 +77,32 @@ export function Sidebar({ open, onClose, role }: { open: boolean; onClose: () =>
             </button>
           </div>
           <nav aria-label="Main navigation" className="mt-4 space-y-1 px-4">
-            {NAV_ITEMS[role].map(({ href, label, icon: Icon }) => {
+            {NAV_ITEMS[role].map(({ href, label, icon: Icon, tip }) => {
               const active = isActive(href);
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClose}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition",
-                    active
-                      ? "border-l-4 border-brand bg-slate-800 text-white"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                // The "?" sits beside the link, not inside it: a button can't be nested in a link.
+                <div key={href} className="relative">
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition",
+                      tip && "pr-10",
+                      active
+                        ? "border-l-4 border-brand bg-slate-800 text-white"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    )}
+                  >
+                    <Icon className="h-[18px] w-5 shrink-0" />
+                    {label}
+                  </Link>
+                  {tip && (
+                    <span className="absolute top-1/2 right-3 -translate-y-1/2">
+                      <InfoTip text={tip.text} label={tip.term} tone="dark" align="end" />
+                    </span>
                   )}
-                >
-                  <Icon className="h-[18px] w-5 shrink-0" />
-                  {label}
-                </Link>
+                </div>
               );
             })}
           </nav>

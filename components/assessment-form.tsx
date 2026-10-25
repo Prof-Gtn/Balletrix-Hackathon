@@ -3,9 +3,6 @@
 import { useRef, useState } from "react";
 import {
   AlertTriangle,
-  ArrowRight,
-  Ban,
-  CheckCircle2,
   ChevronDown,
   FileText,
   FileWarning,
@@ -14,11 +11,9 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
-  XCircle,
 } from "lucide-react";
 import { useAssessment } from "@/components/assessment-context";
-import { useWizard } from "@/components/dashboard-wizard";
-import type { Assessment, Criterion, ScoreBonus } from "@/lib/claude";
+import type { Assessment, Criterion } from "@/lib/claude";
 import { cn } from "@/lib/utils";
 
 const CRITERIA_LABELS: Record<Criterion, string> = {
@@ -42,10 +37,9 @@ function criterionLabel(value: string): string {
 export const primaryButton =
   "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-brand px-6 text-sm font-bold text-white shadow-brand transition hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
 
-// Step 1: describe or upload the business, run the assessment, and see the headline result.
+// The input: describe or upload the business, then run the assessment. Results are shown by the page.
 export function AssessmentForm() {
-  const { assess, isPending, response } = useAssessment();
-  const wizard = useWizard();
+  const { assess, isPending } = useAssessment();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [description, setDescription] = useState("");
   const [planFile, setPlanFile] = useState<File | null>(null);
@@ -64,15 +58,12 @@ export function AssessmentForm() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  const result = response?.result;
-  const evidenceBonus = response?.ok ? response.evidenceBonus : null;
-
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div className="grid gap-3">
           <label htmlFor="business-description" className="text-base font-bold text-ink">
-            Step 1: Tell us about your business
+            Describe your business
           </label>
           <p className="text-sm leading-relaxed text-muted">
             What do you sell? Who buys it? How do you charge, and how much do you earn each month?
@@ -134,65 +125,63 @@ export function AssessmentForm() {
           )}
         </div>
 
-        <button type="submit" disabled={isPending || (!description.trim() && !planFile)} className={cn(primaryButton, "w-full sm:w-auto sm:self-start")}>
+        <button
+          type="submit"
+          disabled={isPending || (!description.trim() && !planFile)}
+          className={cn(primaryButton, "min-h-[60px] w-full bg-orange-500 text-base hover:bg-orange-600")}
+        >
           {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
-          {isPending ? "Working on it..." : "Run Assessment"}
+          {isPending ? "Working on it..." : "Run AI Assessment"}
         </button>
       </form>
 
       <AssessmentStatus />
-
-      {result && !isPending && (
-        <div className="flex flex-col gap-6 border-t border-line pt-8">
-          <ResultSummary result={result} evidenceBonus={evidenceBonus} />
-
-          {!result.weaknesses.length || result.gate_status === "PASSED" ? null : (
-            <section className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-sm">
-              <div className="flex items-center gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white px-5 py-4">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-500 text-white">
-                  <AlertTriangle className="h-4 w-4" />
-                </span>
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">Why your score is low</h3>
-                  <p className="text-xs text-gray-500">Fix these and your score goes up.</p>
-                </div>
-              </div>
-              <ol className="divide-y divide-gray-100">
-                {result.weaknesses.map((weakness, i) => (
-                  <li key={i} className="flex gap-4 px-5 py-4">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange-50 text-xs font-bold text-orange-600">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <span className="mb-1 inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-600 uppercase">
-                        {criterionLabel(weakness.criterion)}
-                      </span>
-                      <p className="text-sm leading-relaxed text-slate-700">{weakness.reason}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
-
-          <EvidenceFlags flags={result.evidence_flags} />
-
-          <AdvancedDetails result={result} />
-
-          {wizard && (
-            <button type="button" onClick={() => wizard.goTo(2)} className={cn(primaryButton, "w-full sm:w-auto sm:self-start")}>
-              Next: See your action plan <ArrowRight className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-// Loading message, error, and gate result banner. Shared by Step 1 and the "check again" button in Step 2.
-export function AssessmentStatus({ showResult = false }: { showResult?: boolean }) {
-  const { isPending, loadingMessage, response, assessedMonth } = useAssessment();
+// The full breakdown of a result from this session: why the score is low, what was proven, and the 10
+// criteria. Only this session's result has these details; the saved profile keeps the score and plan.
+export function AssessmentBreakdown({ result }: { result: Assessment }) {
+  return (
+    <div className="flex flex-col gap-6">
+      {!result.weaknesses.length || result.gate_status === "PASSED" ? null : (
+        <section>
+          <div className="mb-3 flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-orange-500" />
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Why your score is low</h3>
+              <p className="text-xs text-gray-500">Fix these and your score goes up.</p>
+            </div>
+          </div>
+          <ol className="divide-y divide-gray-100 rounded-2xl border border-gray-100">
+            {result.weaknesses.map((weakness, i) => (
+              <li key={i} className="flex gap-4 px-5 py-4">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange-50 text-xs font-bold text-orange-600">
+                  {i + 1}
+                </span>
+                <div className="min-w-0">
+                  <span className="mb-1 inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-600 uppercase">
+                    {criterionLabel(weakness.criterion)}
+                  </span>
+                  <p className="text-sm leading-relaxed text-slate-700">{weakness.reason}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <EvidenceFlags flags={result.evidence_flags} />
+
+      <AdvancedDetails result={result} />
+    </div>
+  );
+}
+
+// Loading message while the AI works, and the error if the assessment couldn't run.
+export function AssessmentStatus() {
+  const { isPending, loadingMessage, response } = useAssessment();
 
   if (isPending) {
     return (
@@ -210,75 +199,7 @@ export function AssessmentStatus({ showResult = false }: { showResult?: boolean 
       </div>
     );
   }
-  if (showResult && response?.result) return <GateBanner result={response.result} assessedMonth={assessedMonth} />;
   return null;
-}
-
-function ResultSummary({ result, evidenceBonus }: { result: Assessment; evidenceBonus: ScoreBonus | null }) {
-  const { assessedMonth } = useAssessment();
-  const disqualified = result.gate_status === "DISQUALIFIED";
-
-  return (
-    <div className="flex flex-col gap-4">
-      <GateBanner result={result} assessedMonth={assessedMonth} />
-      <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-canvas px-5 py-4">
-        <div>
-          <p className="text-xs font-bold tracking-[1px] text-muted uppercase">Investment Readiness Score</p>
-          <p className="text-[40px] leading-none font-extrabold tracking-[-1px]">
-            {result.overall_score}
-            <span className="text-lg font-semibold text-muted">/100</span>
-          </p>
-        </div>
-        {!disqualified && evidenceBonus && evidenceBonus.readiness > 0 && (
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-xs font-bold text-success">
-            <CheckCircle2 className="h-4 w-4" />
-            Includes +{evidenceBonus.readiness} for your checked documents
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function GateBanner({ result, assessedMonth }: { result: Assessment; assessedMonth: number }) {
-  if (result.gate_status === "DISQUALIFIED") {
-    return (
-      <div className="flex items-start gap-3 rounded-2xl border-l-4 border-danger bg-navy p-5 text-white" role="alert">
-        <Ban className="mt-0.5 h-6 w-6 shrink-0 text-danger" />
-        <div>
-          <p className="text-base font-bold">We can&apos;t score this yet: Month {assessedMonth} stays locked</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#c3ccdc]">{result.evidence_flags.disqualification_reason}</p>
-          <p className="mt-2 text-xs text-[#8b98aa]">Fix the issue above and run the assessment again.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (result.gate_status === "PASSED") {
-    return (
-      <div className="flex items-start gap-3 rounded-2xl bg-success-soft p-5 text-[#0a6b51]">
-        <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-success" />
-        <div>
-          <p className="text-base font-bold">
-            {assessedMonth < 3
-              ? `Gate Unlocked! You are now in Month ${assessedMonth + 1}`
-              : "Final Gate Unlocked! You have completed the incubation programme"}
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed">{result.gate_feedback}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-start gap-3 rounded-2xl bg-danger-soft p-5 text-[#9b2a3d]">
-      <XCircle className="mt-0.5 h-6 w-6 shrink-0 text-danger" />
-      <div>
-        <p className="text-base font-bold">Not yet: Month {assessedMonth} is still locked</p>
-        <p className="mt-1.5 text-sm leading-relaxed">{result.gate_feedback}</p>
-      </div>
-    </div>
-  );
 }
 
 const FLAG_GROUPS = [
@@ -287,7 +208,7 @@ const FLAG_GROUPS = [
     title: "Proven by your documents",
     empty: "Nothing proven by documents yet.",
     icon: ShieldCheck,
-    className: "border-success/25 bg-success-soft text-[#0a6b51]",
+    className: "border-gray-100 text-slate-700",
     iconClassName: "text-success",
   },
   {
@@ -295,7 +216,7 @@ const FLAG_GROUPS = [
     title: "What you told us (not yet proven)",
     empty: "Nothing here.",
     icon: MessageSquareQuote,
-    className: "border-warning/25 bg-warning-soft text-[#7a5212]",
+    className: "border-gray-100 text-slate-700",
     iconClassName: "text-warning",
   },
   {
@@ -303,7 +224,7 @@ const FLAG_GROUPS = [
     title: "Documents to upload next",
     empty: "Nothing missing.",
     icon: FileWarning,
-    className: "border-danger/25 bg-danger-soft text-[#9b2a3d]",
+    className: "border-gray-100 text-slate-700",
     iconClassName: "text-danger",
   },
 ] as const;
@@ -320,7 +241,7 @@ function EvidenceFlags({ flags }: { flags: Assessment["evidence_flags"] }) {
               <h4 className="flex items-center gap-2 text-sm font-bold">
                 <Icon className={cn("h-4 w-4", iconClassName)} />
                 {title}
-                <span className="ml-auto rounded-full bg-white/70 px-2 text-xs">{items.length}</span>
+                <span className="ml-auto rounded-full bg-gray-100 px-2 text-xs">{items.length}</span>
               </h4>
               {items.length ? (
                 <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed">

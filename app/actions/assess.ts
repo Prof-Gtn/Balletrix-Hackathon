@@ -13,6 +13,7 @@ import { DocumentReadError, extractDocumentText } from "@/lib/documents";
 import { ASSESSMENT_EVIDENCE_TYPE, EVIDENCE_TYPE_LABELS, fileNameFromPath, isEvidenceType } from "@/lib/evidence";
 import { loadPreferredLanguage } from "@/lib/preferred-language";
 import type { RedTeamReport } from "@/lib/red-team";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_MONTH = 3;
@@ -164,7 +165,10 @@ export async function runAssessment(formData: FormData): Promise<AssessmentResul
   }
 
   // The score always reflects the latest assessment; the month only advances when the gate is passed.
-  const { error: updateError } = await supabase
+  // Users can't change these two columns themselves (database trigger), so the server writes them with
+  // the service role, scoped to this user. Without the key it falls back to the user's own session.
+  const progressWriter = createAdminClient() ?? supabase;
+  const { error: updateError } = await progressWriter
     .from("profiles")
     .update({
       readiness_score: result.overall_score,

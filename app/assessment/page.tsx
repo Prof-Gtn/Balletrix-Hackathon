@@ -1,18 +1,16 @@
 import { redirect } from "next/navigation";
-import { Briefcase, Calculator, Handshake, ShieldAlert, ShieldCheck } from "lucide-react";
-import { ActionPlan } from "@/components/action-plan";
+import { Briefcase, Calculator, Handshake } from "lucide-react";
 import { AssessmentProvider } from "@/components/assessment-context";
-import { AssessmentForm } from "@/components/assessment-form";
-import { DashboardWizard } from "@/components/dashboard-wizard";
+import { AssessmentWorkspace, type LastGate } from "@/components/assessment-workspace";
 import { DCFCalculator } from "@/components/dcf-calculator";
 import { DueDiligencePackage } from "@/components/due-diligence-package";
-import { CountChip, countEvidence, EvidenceList } from "@/components/evidence-list";
+import { EvidenceList } from "@/components/evidence-list";
 import { EvidenceUploadForm } from "@/components/evidence-upload-form";
+import { GLOSSARY, InfoTip } from "@/components/info-tip";
 import { PageTitle } from "@/components/page-title";
 import { RedTeamCard } from "@/components/red-team-card";
-import { RerunAssessment } from "@/components/rerun-assessment";
 import { ASSESSMENT_EVIDENCE_TYPE } from "@/lib/evidence";
-import { GATE_REQUIREMENTS, toIncubationMonth } from "@/lib/gates";
+import { toIncubationMonth } from "@/lib/gates";
 import { formatNad, INSTRUMENTS, isInstrument, MOCK_ENTREPRENEUR_SECTOR } from "@/lib/investors";
 import { HOME, toRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
@@ -35,7 +33,7 @@ export default async function AssessmentPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile, error }, { data: evidence, error: evidenceError }] = await Promise.all([
+  const [{ data: profile, error }, { data: evidence, error: evidenceError }, { data: lastAssessment }] = await Promise.all([
     // "*" rather than a column list: red_team_flaws, roadmap and reconciliation_status only exist once
     // their migrations have run, and naming them before that would fail the whole query.
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
@@ -46,6 +44,15 @@ export default async function AssessmentPage() {
       .neq("evidence_type", ASSESSMENT_EVIDENCE_TYPE)
       .not("file_url", "is", null)
       .order("created_at", { ascending: false }),
+    // The latest assessment's gate result, for the score card.
+    supabase
+      .from("evidence_submissions")
+      .select("month, ai_verification_status, ai_feedback")
+      .eq("user_id", user.id)
+      .eq("evidence_type", ASSESSMENT_EVIDENCE_TYPE)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const role = toRole(profile?.role);
@@ -54,70 +61,19 @@ export default async function AssessmentPage() {
   const currentMonth = toIncubationMonth(profile?.current_month ?? 1);
   const readinessScore: number = profile?.readiness_score ?? 0;
   const businessName: string | null = profile?.business_name || null;
-  const hasAssessment = readinessScore > 0 || Boolean(profile?.roadmap) || Boolean(profile?.red_team_flaws);
+  const hasAssessment =
+    Boolean(lastAssessment) || readinessScore > 0 || Boolean(profile?.roadmap) || Boolean(profile?.red_team_flaws);
 
-  // Step 3 (and the investors in it) unlocks once the entrepreneur reaches the final incubation month.
-  const fundingUnlocked = (profile?.current_month ?? 1) >= 3;
+  // Funding tools (and the investors in them) unlock once the entrepreneur reaches the final incubation month.
+  const fundingUnlocked = currentMonth >= 3;
   const { data: matches, error: matchError } = fundingUnlocked
     ? await supabase.rpc("match_investors", { p_sector: MOCK_ENTREPRENEUR_SECTOR })
     : { data: null, error: null };
   const matchedInvestors = (matches ?? []) as MatchedInvestor[];
 
-  const { checkedCount, needsAttentionCount } = countEvidence(evidence ?? [], currentMonth);
-
-  const steps = [
-    {
-      title: "Your Business",
-      subtitle: "Type a short description or upload your business plan. We'll check it and give you a score.",
-      done: hasAssessment,
-      content: <AssessmentForm />,
-    },
-    {
-      title: "Fix & Prove",
-      subtitle: `Follow your action plan, then upload proof. To unlock Month ${currentMonth < 3 ? currentMonth + 1 : 3}, you need ${GATE_REQUIREMENTS[currentMonth].sentence}.`,
-      content: (
-        <div className="flex flex-col gap-8">
-          <ActionPlan saved={profile?.roadmap ?? null} />
-          <RedTeamCard data={profile?.red_team_flaws ?? null} />
-
-          <div className="flex flex-col gap-6 rounded-3xl border border-line p-5 sm:p-7">
-            <div className="grid grid-cols-2 gap-3">
-              <CountChip label="Checked Documents" count={checkedCount} icon={ShieldCheck} tone="good" />
-              <CountChip label="Needs Attention" count={needsAttentionCount} icon={ShieldAlert} tone="bad" />
-            </div>
-            <EvidenceUploadForm />
-            <EvidenceList evidence={evidence ?? []} />
-          </div>
-
-          <RerunAssessment />
-        </div>
-      ),
-    },
-    {
-      title: "Get Funded",
-      subtitle: "Prepare a professional package for investors and see who is interested in your sector.",
-      lockedMessage: fundingUnlocked
-        ? undefined
-        : `Step 3 unlocks when you reach Month 3. You're in Month ${currentMonth} now: complete your action plan and pass the gate in Step 2 to move forward.`,
-      content: (
-        <div className="flex flex-col gap-8">
-          <FundingBlock icon={Briefcase} title="Due Diligence Package">
-            <DueDiligencePackage />
-          </FundingBlock>
-          <FundingBlock icon={Handshake} title="Matched Investors" aside={`Sector: ${MOCK_ENTREPRENEUR_SECTOR}`}>
-            <MatchedInvestors investors={matchedInvestors} error={matchError?.message ?? null} />
-          </FundingBlock>
-          <FundingBlock icon={Calculator} title="What is my business worth?">
-            <DCFCalculator />
-          </FundingBlock>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <AssessmentProvider currentMonth={currentMonth}>
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 p-4 md:p-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 p-4 md:p-8">
         <PageTitle
           title="Assessment"
           subtitle={
@@ -133,65 +89,83 @@ export default async function AssessmentPage() {
           </p>
         )}
 
-        <ScoreBanner score={readinessScore} month={currentMonth} />
-
-        <DashboardWizard steps={steps} initialStep={hasAssessment ? 2 : 1} />
+        <AssessmentWorkspace
+          hasAssessment={hasAssessment}
+          score={readinessScore}
+          month={currentMonth}
+          lastGate={lastAssessment ? toLastGate(lastAssessment) : null}
+          savedRoadmap={profile?.roadmap ?? null}
+          toughLove={<RedTeamCard data={profile?.red_team_flaws ?? null} />}
+          evidence={
+            <section className="flex flex-col gap-6 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+              <div>
+                <h2 className="flex items-center gap-1.5 text-lg font-bold text-slate-800">
+                  Upload Evidence <InfoTip text={GLOSSARY.evidence} label="Evidence" />
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Prove what you told us. Checked documents raise your score when you run the assessment again.
+                </p>
+              </div>
+              <EvidenceUploadForm />
+              <EvidenceList evidence={evidence ?? []} />
+            </section>
+          }
+          funding={
+            fundingUnlocked ? (
+              <section className="flex flex-col gap-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Get Funded</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    You reached Month 3. Prepare your investor package and see who invests in your sector.
+                  </p>
+                </div>
+                <FundingBlock icon={Briefcase} title="Due Diligence Package" tip={GLOSSARY.dueDiligence}>
+                  <DueDiligencePackage />
+                </FundingBlock>
+                <FundingBlock icon={Handshake} title="Matched Investors" aside={`Sector: ${MOCK_ENTREPRENEUR_SECTOR}`}>
+                  <MatchedInvestors investors={matchedInvestors} error={matchError?.message ?? null} />
+                </FundingBlock>
+                <FundingBlock icon={Calculator} title="What is my business worth?">
+                  <DCFCalculator />
+                </FundingBlock>
+              </section>
+            ) : undefined
+          }
+        />
       </div>
     </AssessmentProvider>
   );
 }
 
-function ScoreBanner({ score, month }: { score: number; month: number }) {
-  const clamped = Math.min(100, Math.max(0, score));
-  return (
-    <section className="relative overflow-hidden rounded-3xl bg-navy p-6 text-white sm:p-8" aria-label="Your progress">
-      <div aria-hidden className="absolute -right-24 -bottom-24 h-64 w-64 rounded-full border border-white/[0.07] shadow-[0_0_0_30px_#ffffff05]" />
-      <div className="relative flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div>
-          <p className="text-sm font-bold text-[#c3ccdc]">Your Investment Readiness Score</p>
-          <p className="mt-1 text-[52px] leading-none font-extrabold tracking-[-2px] sm:text-[64px]">
-            {score}
-            <span className="text-2xl font-bold tracking-normal text-[#8b98aa]">/100</span>
-          </p>
-        </div>
-        <div className="text-left sm:text-right">
-          <p className="text-sm font-bold text-[#c3ccdc]">Current Stage</p>
-          <p className="mt-1 text-2xl font-extrabold">Month {month} of 3</p>
-        </div>
-      </div>
-      <div
-        className="relative mt-6 h-3 rounded-full bg-white/10"
-        role="progressbar"
-        aria-label="Investment Readiness Score"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={clamped}
-      >
-        <div className="h-3 rounded-full bg-brand-light transition-[width]" style={{ width: `${clamped}%` }} />
-      </div>
-      <p className="relative mt-3 text-sm text-[#c3ccdc]">
-        To unlock the next month you need: <b className="text-white">{GATE_REQUIREMENTS[toIncubationMonth(month)].summary}</b>
-      </p>
-    </section>
-  );
+// The saved assessment row: "verified" means the gate passed; disqualifications are saved with a prefix.
+function toLastGate(row: { month: number; ai_verification_status: string; ai_feedback: string | null }): LastGate {
+  const feedback = row.ai_feedback ?? null;
+  if (row.ai_verification_status === "verified") return { status: "PASSED", month: row.month, feedback };
+  if (feedback?.startsWith("DISQUALIFIED:")) {
+    return { status: "DISQUALIFIED", month: row.month, feedback: feedback.slice("DISQUALIFIED:".length).trim() };
+  }
+  return { status: "FAILED", month: row.month, feedback };
 }
 
 function FundingBlock({
   icon: Icon,
   title,
   aside,
+  tip,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   aside?: string;
+  tip?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-line p-5 sm:p-7">
+    <section className="border-t border-gray-100 pt-8">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-lg font-extrabold">
+        <h3 className="flex items-center gap-2 text-lg font-bold">
           <Icon className="h-5 w-5 text-brand" /> {title}
+          {tip && <InfoTip text={tip} label={title} />}
         </h3>
         {aside && <span className="rounded-lg border border-line px-2.5 py-1 text-xs text-[#68768c]">{aside}</span>}
       </div>
